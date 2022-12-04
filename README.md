@@ -3,9 +3,9 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 
 # Prerequisites
 
-- dftb+
+- [dftb+](https://github.com/dftbplus/dftbplus)
 - numpy and scipy
-- phonopy (`conda install -c conda-forge phonopy`)
+- [phonopy](https://github.com/phonopy/phonopy) (`conda install -c conda-forge phonopy`)
 - setuptools (`pip install setuptools`)
 - cython (`pip install Cython`)
 
@@ -26,4 +26,5 @@ The main purpose of dftBephy is the calculation of electron-phonon couplings. Ap
 - EPCs and relaxation times along a band path (q and k paths, respectively) -- graphene-ephline.py and graphene-lws.py -- the results are stored in as json.
 - EPCs at k-point on a fine q-mesh -- graphene_epc-py -- the result is stored in a hdf5 file. 
 - Relaxation times and input for Boltztrap2 -- graphene_mobility.py -- the results are stored in a hdf5 file. For this script, ase and spglib are required.
+
 See jupyter notebooks in notebooks/ for how to read, use and visualize the output.
