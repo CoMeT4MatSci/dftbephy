@@ -1,7 +1,7 @@
 import numpy as np
 
 try:
-    from .extensions import alphaFnk, inv_tau_nk, inv_tau_nk_lam
+    from .extensions import alphaFnk, inv_tau_nk, inv_tau_nk_lam, inv_tau_nk_lor, inv_tau_nk_lam_lor
 except ModuleNotFoundError:
     print('Warning: C-extensions not available')
 
@@ -28,22 +28,28 @@ except ModuleNotFoundError:
     def fermi(x):
         return 1/(np.exp(x) + 1)
 
+    def gaussian(x, sigma):
+        return np.exp( - x**2/(2*sigma**2))/(np.sqrt(2*np.pi)*sigma)
+
+    def lorentzian(x, sigma):
+        return (sigma/2)/(x**2 + (sigma/2)**2)/np.pi
+
     def inv_tau_nk(n, eps, mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies, sigma):
         nbands = mesh_g2.shape[2]
         nmodes = mesh_g2.shape[1]
         nqpoints = mesh_g2.shape[0]
 
         tau_p = 0.0
-        tau_m = 0.0        
+        tau_m = 0.0
         for iq in range(nqpoints):
             for lam in range(nmodes):
                 for m in range(nbands):
 
                     weight_p = np.exp( -(eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)
-                    weight_m = np.exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)                
+                    weight_m = np.exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)
 
                     tau_p += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
-                    tau_m += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m                
+                    tau_m += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m
         return 2*np.pi*(tau_p+tau_m)/nqpoints, 2*np.pi*(tau_p)/nqpoints, 2*np.pi*(tau_m)/nqpoints
 
     def inv_tau_nk_lam(n, eps, mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies, sigma):
@@ -58,12 +64,49 @@ except ModuleNotFoundError:
                 for m in range(nbands):
 
                     weight_p = np.exp( -(eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)
-                    weight_m = np.exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)                
+                    weight_m = np.exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(np.sqrt(2*np.pi)*sigma)
 
                     tau_p[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
-                    tau_m[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m                
+                    tau_m[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m
         return 2*np.pi*(tau_p+tau_m)/nqpoints, 2*np.pi*(tau_p)/nqpoints, 2*np.pi*(tau_m)/nqpoints
-    
+
+    def inv_tau_nk_lor(n, eps, mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies, sigma):
+        nbands = mesh_g2.shape[2]
+        nmodes = mesh_g2.shape[1]
+        nqpoints = mesh_g2.shape[0]
+
+        tau_p = 0.0
+        tau_m = 0.0
+        for iq in range(nqpoints):
+            for lam in range(nmodes):
+                for m in range(nbands):
+
+                    weight_p = lorentzian( eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+                    weight_m = lorentzian( eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+
+                    tau_p += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((eps + mesh_frequencies[iq,lam]-mu)/kBT)) * weight_p
+                    tau_m += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((eps - mesh_frequencies[iq,lam]-mu)/kBT)) * weight_m
+        return 2*np.pi*(tau_p+tau_m)/nqpoints, 2*np.pi*(tau_p)/nqpoints, 2*np.pi*(tau_m)/nqpoints
+
+    def inv_tau_nk_lam_lor(n, eps, mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies, sigma):
+        nbands = mesh_g2.shape[2]
+        nmodes = mesh_g2.shape[1]
+        nqpoints = mesh_g2.shape[0]
+
+        tau_p = np.zeros((nmodes,))
+        tau_m = np.zeros((nmodes,))
+        for iq in range(nqpoints):
+            for lam in range(nmodes):
+                for m in range(nbands):
+
+                    weight_p = lorentzian( eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+                    weight_m = lorentzian( eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+
+                    tau_p[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((eps + mesh_frequencies[iq,lam]-mu)/kBT)) * weight_p
+                    tau_m[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((eps - mesh_frequencies[iq,lam]-mu)/kBT)) * weight_m
+        return 2*np.pi*(tau_p+tau_m)/nqpoints, 2*np.pi*(tau_p)/nqpoints, 2*np.pi*(tau_m)/nqpoints
+
+
 def phononDOS(frequency_points, mesh_frequencies, sigma):
     nmodes = mesh_frequencies.shape[1]
     nqpoints = mesh_frequencies.shape[0]

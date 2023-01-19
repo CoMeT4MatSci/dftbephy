@@ -224,7 +224,7 @@ class DftbSuperCellCalc:
 
         return eps_k, U_k, tdm_k
 
-    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=-1, nprocs=1):
+    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=-1):
         """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors).
 
             returns: eps_k = electronic energies at kvec0 (nqpoints)
@@ -236,12 +236,9 @@ class DftbSuperCellCalc:
         if (self.H_derivs is None) or (self.S_derivs is None):
             raise RuntimeError("Derivatives of Hamiltonian and Overlap matrices not available. Run calculate_derivatives() first.")
             
-        if nprocs == 1:
-            eps_k, mesh_epskq, mesh_g2 = calculate_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
-        else:
-            eps_k, mesh_epskq, mesh_g2 = calculate_g2_parallel(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs, nprocs)
+        eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
 
-        return eps_k, mesh_epskq, mesh_g2
+        return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
 
 
 # WORK IN PROGRESS!!

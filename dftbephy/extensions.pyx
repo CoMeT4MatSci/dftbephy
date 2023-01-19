@@ -2,8 +2,10 @@
 
 # cimport numpy as np
 import numpy as np
+
+cimport numpy as np
+
 import cython
-from cython.parallel import prange
 
 from libc.math cimport sqrt, exp
 
@@ -14,6 +16,8 @@ cdef extern from "<complex.h>" namespace "std" nogil:
 cdef double complex I = 1j
 cdef double PI = np.pi
 cdef double complex TWO_PI_I = 2*np.pi*I
+
+DTYPE = np.float64
 
 # fourier
 
@@ -264,12 +268,72 @@ def alphaFnk(long n, double eps, double[:] frequency_points, double[:,:,:,:] mes
                     alphaF_view[nf] +=   weight_ph * mesh_g2[iq,lam,m,n] * weight_el / nqpoints
     return alphaF
 
-
+@cython.cdivision(True)
 cdef double bose(double x):
     return 1.0/(exp(x) - 1.0)
 
+@cython.cdivision(True)
 cdef double fermi(double x):
     return 1.0/(exp(x) + 1.0)
+
+@cython.cdivision(True)
+cdef double lorentzian(double x, double sigma):
+    return (sigma/2.0)/(x*x + (sigma/2.0)*(sigma/2.0))/PI
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def inv_tau_nk_lor(long n, double eps, double mu, double kBT, double[:,:,:,:] mesh_g2, double[:,:] mesh_epskq, double[:,:] mesh_frequencies, double sigma):
+    cdef Py_ssize_t nbands = mesh_g2.shape[2]
+    cdef Py_ssize_t nmodes = mesh_g2.shape[1]
+    cdef Py_ssize_t nqpoints = mesh_g2.shape[0]
+
+    cdef double tau_p, tau_m, weight_p, weight_m
+    cdef Py_ssize_t iq, lam, m
+
+    tau_p = 0.0
+    tau_m = 0.0
+    for iq in range(nqpoints):
+        for lam in range(nmodes):
+            for m in range(nbands):
+
+                weight_p = lorentzian( eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+                weight_m = lorentzian( eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+
+                tau_p += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
+                tau_m += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m
+    return 2*PI*(tau_p+tau_m)/nqpoints, 2*PI*tau_p/nqpoints, 2*PI*tau_m/nqpoints
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def inv_tau_nk_lam_lor(long n, double eps, double mu, double kBT, double[:,:,:,:] mesh_g2, double[:,:] mesh_epskq, double[:,:] mesh_epskmq, double[:,:] mesh_frequencies, double sigma):
+    cdef Py_ssize_t nbands = mesh_g2.shape[2]
+    cdef Py_ssize_t nmodes = mesh_g2.shape[1]
+    cdef Py_ssize_t nqpoints = mesh_g2.shape[0]
+
+    cdef double weight_p, weight_m
+    cdef Py_ssize_t iq, lam, m
+
+    tau = np.zeros(nmodes, dtype=DTYPE)
+    tau_p = np.zeros(nmodes, dtype=DTYPE)
+    tau_m = np.zeros(nmodes, dtype=DTYPE)
+    cdef double[:] tau_view = tau  
+    cdef double[:] tau_p_view = tau_p
+    cdef double[:] tau_m_view = tau_m
+    for lam in range(nmodes):
+        for iq in range(nqpoints):
+            for m in range(nbands):
+
+                weight_p = lorentzian( eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m], sigma )
+                weight_m = lorentzian( eps - mesh_frequencies[iq,lam] - mesh_epskmq[iq,m], sigma )
+
+                tau_p_view[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
+                tau_m_view[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskmq[iq,m]-mu)/kBT)) * weight_m
+        tau_p_view[lam] = tau_p_view[lam]*2*PI/nqpoints
+        tau_m_view[lam] = tau_m_view[lam]*2*PI/nqpoints
+        tau_view[lam] = tau_p_view[lam] + tau_m_view[lam]
+    return tau, tau_p, tau_m
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -289,7 +353,7 @@ def inv_tau_nk(long n, double eps, double mu, double kBT, double[:,:,:,:] mesh_g
             for m in range(nbands):
 
                 weight_p = exp( -(eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)
-                weight_m = exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)                
+                weight_m = exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)
 
                 tau_p += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
                 tau_m += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m                
@@ -306,9 +370,9 @@ def inv_tau_nk_lam(long n, double eps, double mu, double kBT, double[:,:,:,:] me
     cdef double weight_p, weight_m
     cdef Py_ssize_t iq, lam, m
     
-    tau = np.zeros((nmodes,), dtype=np.double)
-    tau_p = np.zeros((nmodes,), dtype=np.double)
-    tau_m = np.zeros((nmodes,), dtype=np.double)
+    tau = np.zeros(nmodes, dtype=DTYPE)
+    tau_p = np.zeros(nmodes, dtype=DTYPE)
+    tau_m = np.zeros(nmodes, dtype=DTYPE)
     cdef double[:] tau_view = tau  
     cdef double[:] tau_p_view = tau_p
     cdef double[:] tau_m_view = tau_m
@@ -317,7 +381,7 @@ def inv_tau_nk_lam(long n, double eps, double mu, double kBT, double[:,:,:,:] me
             for m in range(nbands):
 
                 weight_p = exp( -(eps + mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)
-                weight_m = exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)                
+                weight_m = exp( -(eps - mesh_frequencies[iq,lam] - mesh_epskq[iq,m])**2/(2*sigma**2) )/(sqrt(2*PI)*sigma)
 
                 tau_p_view[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_p
                 tau_m_view[lam] += mesh_g2[iq,lam,m,n] * (bose(mesh_frequencies[iq,lam]/kBT) + 1. - fermi((mesh_epskq[iq,m]-mu)/kBT)) * weight_m                

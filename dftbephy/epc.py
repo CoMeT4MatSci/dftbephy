@@ -108,12 +108,19 @@ def calculate_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvect
     g_S_k_loc = np.zeros((sum(norbitals), sum(norbitals)), complex)
     g_S_kq_loc = np.zeros((sum(norbitals), sum(norbitals)), complex)
 
-    # output array for g2 and eps_kq
+    # output array for g2, eps_kq, eps_kmq
     mesh_g2 = np.zeros((nqpoints, nmodes, nbands, nbands), float)
     mesh_epskq = np.zeros((nqpoints, nbands), float)
+    mesh_epskmq = np.zeros((nqpoints, nbands), float)
 
     # print('--[calculate_g2] start iteration')
     for iq, qvec in enumerate(mesh_qpoints):
+
+        # get matrices for state at k - q
+        h0_uc = calculate_lattice_ft(ham0, kvec0 - qvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
+        s0_uc = calculate_lattice_ft(S0, kvec0 - qvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
+        eps_kmq, U_kmq = linalg.eigh(h0_uc, b=s0_uc) # diagonalize Hamiltonian
+        mesh_epskmq[iq, :] = eps_kmq[band0:band1]
 
         # get matrices for state at k + q
         h0_uc = calculate_lattice_ft(ham0, kvec0 + qvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
@@ -139,4 +146,4 @@ def calculate_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvect
             # note: the prefactor does not contain Nsc
             calc_g2(mesh_g2, iq, lam, g_H_loc, g_S_k_loc, g_S_kq_loc, eps_k, eps_kq, U_k, U_kq.conj().T, hbar_amu_THz/(np.maximum(2*ph_om, 1e-5)), band0, band1)
                     
-    return eps_k, mesh_epskq, mesh_g2
+    return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
