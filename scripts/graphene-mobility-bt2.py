@@ -11,12 +11,15 @@ from timeit import default_timer as timer
 
 from dftbephy import DftbSuperCellCalc
 from dftbephy.fileio import read_dftb_bands, get_lumo
-from dftbephy.analysis import inv_tau_nk
+from dftbephy.analysis import inv_tau_nk_gauss
 from dftbephy.units import *
 from dftbephy.tools import printProgressBar
 
 import ase
 import spglib
+
+# this is needed for writing hdf files
+import h5py
 
 # this is needed for writing json files
 import json
@@ -44,6 +47,8 @@ def dfermi_deps(x):
 ###############################################################################
 # 0 Set base directory
 basedir = '../examples/Graphene'
+
+q_mesh_refinement = 10
 
 ###############################################################################
 # 1 Load phonopy
@@ -77,8 +82,6 @@ else:
 ###############################################################################
 # 4 Run calculations of electron-phonon couplings
 nq = 200 # size of q-point mesh (nq x nq x 1)
-q_mesh_refinement = 10 # factor by which the q-points are scaled
-
 
 if os.path.isfile('derivatives.npz'):
     print('-- loading derivatives calculation')
@@ -101,6 +104,9 @@ mesh = ph.get_mesh_dict()
 end = timer()
 print('-- finished (%4.1f s).' % (end-start))
 
+#mesh_qpoints= mesh['qpoints']
+#mesh_frequencies = mesh['frequencies'] 
+#mesh_eigenvectors = mesh['eigenvectors']
 
 # we are only interested in a small region around kvec0
 qps = mesh['qpoints']/q_mesh_refinement
@@ -111,7 +117,6 @@ mesh_qpoints = qps
 mesh_frequencies = mesh['frequencies'] 
 mesh_eigenvectors = mesh['eigenvectors']
 
-
 kvec0 = np.array([-2/3, -1/3, 0]) # k-point for electrons
 
 print('-- starting el-ph calculation ...')
@@ -120,25 +125,23 @@ eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints,
 end = timer()
 print('-- finished (%4.1f s).' % (end-start))
 
+
 ###############################################################################
-# 5 Calculate mobility
-nk = 400 # size of k-point mesh (nk x nk x 1)
+# 6 Calculate relaxation times
+nk = 200 # size of k-point mesh (nk x nk x 1)
 mus = np.linspace(eps_k[4], eps_k[4] + 0.40, 40) # chemical potentials in eV
 kBTs = 0.0259 * np.ones_like(mus)  # temperatures in eV
 EF = (eps_k[3]+eps_k[4])/2    # Fermi energy in eV
 sigma_0 = 0.003 # smearing in eV
 Ecut = 1. # cutoff in eV
-spin_factor  = 2 # spin degeneracy
-
 
 temps_chems = zip(kBTs, mus)
-ncalcs = len(list(temps_chems))
+ncalcs = len(list(zip(kBTs, mus)))
 
 print('-- running %d calculations for mu, kBT:' % (ncalcs))
 for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
     print(ic, mu, kBT)
 
-print('-- constructing k-mesh')
 atoms = ase.Atoms(positions=dftb.primitive.get_positions()* BOHR__AA, 
                   numbers=dftb.primitive.get_atomic_numbers(), 
                   cell=dftb.primitive.get_cell()* BOHR__AA, 
@@ -149,66 +152,66 @@ indices = np.unique(fromspglib[0]).tolist()
 weights = [list(fromspglib[0]).count(i) for i in indices]
 kpoints = fromspglib[1] / float(nk)
 kpoints = kpoints[indices,:]
+# gp = GridPoints(np.array([nk,nk,1]), np.linalg.inv(dftb.primitive.cell), 
+#                 rotations=None, is_mesh_symmetry=True, is_gamma_center=True, is_time_reversal=True)
 
-
-nmeshpoints = np.prod([nk, nk, 1])
 nkpoints = len(kpoints)
 nbands = mesh_g2.shape[2]
-
 energies = np.zeros((nkpoints, nbands), float)
+inv_taus = np.zeros((ncalcs, nkpoints, nbands), float)
 velocities = np.zeros((nkpoints, nbands, 3), float)
-conductivities = np.zeros((ncalcs, 3, 3), float)
-conductivities0 = np.zeros((ncalcs, 3, 3), float)
-densities = np.zeros((ncalcs, ), float)
-densities0 = np.zeros((ncalcs, ), float)
 
+with h5py.File('relaxation-times.hdf5', 'w') as f: 
+
+    struct_grp = f.create_group('struct')
+    struct_grp.attrs['name'] = 'gamma-graphyne'
+    el_grp = f.create_group('el')
+    elph_grp = f.create_group('el-ph')
+    ph_grp = f.create_group('ph')    
+
+    ds = struct_grp.create_dataset('positions', data=dftb.primitive.get_positions()* BOHR__AA)
+    ds = struct_grp.create_dataset('numbers', data=dftb.primitive.get_atomic_numbers())
+    ds = struct_grp.create_dataset('cell', data=dftb.primitive.get_cell()* BOHR__AA)
+
+    ds = ph_grp.create_dataset('q-points', data=mesh_qpoints)
+    ds = ph_grp.create_dataset('frequencies', data=mesh_frequencies*THZ__EV)
     
-print('-- processing %d k-points' % (nkpoints))
-printProgressBar(0, nkpoints, prefix='k-point', suffix='complete')
-nepccalcs = 0
-for ik, kvec in enumerate(kpoints):
-    eps_k, vel_k = dftb.calculate_velocity(kvec)
+    print('-- processing %d k-points' % (nkpoints))
+    printProgressBar(0, nkpoints, prefix='k-point', suffix='complete')
+    nepccalcs = 0
+    for ik, kvec in enumerate(kpoints):
+        eps_k, vel_k = dftb.calculate_velocity(kvec)
 
-    for n in range(nbands):
-        energies[ik,n] = eps_k[n]
-        velocities[ik,n,:] = vel_k[:,n]
-
-        for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
-            densities[ic]  += (weights[ik]/nmeshpoints) * ( fermi((eps_k[n]-mu)/kBT) - fermi((eps_k[n]-EF)/kBT) )
-            densities0[ic] += (weights[ik]/nmeshpoints) * ( fermi((eps_k[n]-EF)/kBT) )                    
-    
-    # consider only k-points within a certain energy range for transport properties
-    if np.abs(eps_k - EF).min() < Ecut:
-
-        eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
-        nepccalcs += 1
-
-        for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
+        # consider only k-points within a certain energy range
+        if np.abs(eps_k - EF).min() < Ecut:
+        
+            eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
+            nepccalcs += 1
+            
             for n in range(nbands):
+                energies[ik,n] = eps_k[n]
+                velocities[ik,n,:] = vel_k[:,n]
 
-                inv_tau = inv_tau_nk_gauss( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
+                for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
+                    inv_taus[ic,ik,n] = inv_tau_nk_gauss( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
                 
-                conductivities[ic,:,:]  += (AA_EV__m_s**2 * EV__ps * 1e-12)*(weights[ik]/nmeshpoints)*(-dfermi_deps((eps_k[n]-mu)/kBT)/kBT) * np.outer(vel_k[:,n],vel_k[:,n]) * (1/inv_tau)
-                conductivities0[ic,:,:] += (AA_EV__m_s**2 * 1e-12)*(weights[ik]/nmeshpoints)*(-dfermi_deps((eps_k[n]-mu)/kBT)/kBT) * np.outer(vel_k[:,n],vel_k[:,n])
-
-    printProgressBar(ik+1, nkpoints, prefix='k-point', suffix='complete')
+        else:
+            for n in range(nbands):
+                energies[ik,n] = eps_k[n]
+                velocities[ik,n,:] = vel_k[:,n]
+                inv_taus[:,ik,n] = 1e10
+            
+        printProgressBar(ik+1, nkpoints, prefix='k-point', suffix='complete')
     
-print('-- %d epc calculations done.' % (nepccalcs))
+    ds = elph_grp.create_dataset('linewidths', data=inv_taus)
+    ds.attrs['kBTs'] = kBTs
+    ds.attrs['mus'] = mus
+    ds.attrs['Nq'] = nq
+    ds.attrs['sigma'] = sigma_0
+    
+    ds = el_grp.create_dataset('eps_kn', data=energies)
+    ds.attrs['EF'] = EF
+    ds = el_grp.create_dataset('vel_kn', data=velocities)
+    ds = el_grp.create_dataset('k-points', data=kpoints)
 
-cell = ph.primitive.get_cell() * BOHR__AA
-cell_area = np.linalg.norm(np.cross(cell[0],cell[1]))
-
-
-# generate output as json
-tr_dict = { 'kBTs': kBTs, 'mus': mus, 'Nq': nq, 'Nk': nk, 'sigma': sigma_0, 'EF': EF, 'cell_area': cell_area,
-           'nepccalcs': nepccalcs,
-  'conductivities': spin_factor*conductivities/cell_area,
-  'conductivities0': spin_factor*conductivities0/cell_area,
-  'densities': spin_factor*densities/cell_area,
-  'densities0': spin_factor*densities0/cell_area}
-
-with open('transport.json', 'w') as outfile:
-    json.dump(json.dumps(tr_dict, default=convert), outfile)
-
-#np.savez('eband_vband.npz', eband=(energies), vband=(velocities))
-
+    print('-- %d epc calculations ' % (nepccalcs))
