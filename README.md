@@ -3,8 +3,8 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 
 # Prerequisites
 
-- [dftb+](https://github.com/dftbplus/dftbplus)
 - numpy and scipy
+- [dftb+](https://github.com/dftbplus/dftbplus)
 - [phonopy](https://github.com/phonopy/phonopy) (`conda install -c conda-forge phonopy`)
 - setuptools (`pip install setuptools`)
 - cython (`pip install Cython`)
@@ -23,8 +23,10 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 
 # What you can get
 The main purpose of dftBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the electron relaxation-time (at the moment only within SERTA). The latter can be used as an input for BoltzTrap2 to calculate transport properties. The scripts/ directory contains some templates for computing
-- EPCs and relaxation times along a band path (q and k paths, respectively) -- graphene-ephline.py and graphene-lws.py -- the results are stored in as json.
-- EPCs at k-point on a fine q-mesh -- graphene_epc-py -- the result is stored in a hdf5 file. 
-- Relaxation times and input for Boltztrap2 -- graphene_mobility.py -- the results are stored in a hdf5 file. For this script, ase and spglib are required.
+- EPCs and relaxation times along a band path (q and k paths, respectively) -- graphene-ephline.py and graphene-lws.py -- the results are stored in a json file;
+- EPCs at k-point on a (fine) q-mesh -- graphene-epc.py -- the result is stored in a hdf5 file;
+- Relaxation times on a (fine) k-mesh -- graphene-relaxationtimes-fine.py -- the results are stored in a hdf5 file;
+- Relaxation times as input for Boltztrap2 -- graphene-mobility-bt2.py -- the results are stored in a hdf5 file. For this script, ase and spglib are required;
+- Conductivity tensor -- graphene-mobility.py -- the results are stored in a json file. For this script, ase and spglib are required.
 
 See jupyter notebooks in notebooks/ for how to read, use and visualize the output.
