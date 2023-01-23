@@ -11,7 +11,7 @@ from timeit import default_timer as timer
 
 from dftbephy import DftbSuperCellCalc
 from dftbephy.fileio import read_dftb_bands, get_lumo
-from dftbephy.analysis import inv_tau_nk_gauss
+from dftbephy.analysis import inv_tau_nk
 from dftbephy.units import *
 from dftbephy.tools import printProgressBar
 
@@ -193,7 +193,7 @@ with h5py.File('relaxation-times.hdf5', 'w') as f:
                 velocities[ik,n,:] = vel_k[:,n]
 
                 for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
-                    inv_taus[ic,ik,n] = inv_tau_nk_gauss( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
+                    inv_taus[ic,ik,n] = inv_tau_nk( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
                 
         else:
             for n in range(nbands):

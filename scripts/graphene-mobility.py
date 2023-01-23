@@ -186,7 +186,7 @@ for ik, kvec in enumerate(kpoints):
         for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
             for n in range(nbands):
 
-                inv_tau = inv_tau_nk_gauss( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
+                inv_tau = inv_tau_nk( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
                 
                 conductivities[ic,:,:]  += (AA_EV__m_s**2 * EV__ps * 1e-12)*(weights[ik]/nmeshpoints)*(-dfermi_deps((eps_k[n]-mu)/kBT)/kBT) * np.outer(vel_k[:,n],vel_k[:,n]) * (1/inv_tau)
                 conductivities0[ic,:,:] += (AA_EV__m_s**2 * 1e-12)*(weights[ik]/nmeshpoints)*(-dfermi_deps((eps_k[n]-mu)/kBT)/kBT) * np.outer(vel_k[:,n],vel_k[:,n])
