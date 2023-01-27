@@ -184,6 +184,7 @@ class DftbSuperCellCalc:
         velocities_k = (self.primitive.cell.T*BOHR__AA) @ velocities_k / (2*np.pi)
         return eps_k, velocities_k
 
+    # WORK IN PROGRESS!!
     def calculate_transition_dipole_moment(self, kvec0):
         """Calculate the transition dipole moment at kvec0.
 
@@ -210,8 +211,6 @@ class DftbSuperCellCalc:
 
         nbands = eps_k.shape[0] # no of electronic bands
         tdm_k = np.zeros((3, nbands, nbands), complex)
-        
-        
         for alpha in range(3):
             tdm_k[alpha, :, :] = -1j *U_k.conj().T @ dSdR_k[alpha, :, :] @ U_k
         
@@ -221,8 +220,11 @@ class DftbSuperCellCalc:
                     tdm_k[:, n, m] = 0.+ 0j
                 else:                    
                     tdm_k[:, n, m] = -1j*tdm_k[:, n, m]/(eps_k[n]-eps_k[m])
+                    
+        # hbar [eV s] * hbar [kg m^2 / s] / ( m_e [kg] * Å ) / Å
+        prefactor =  ( 6.582119569e-16 * 1.054571817e-34 / (9.1093837e-31 * 1e-10) ) * 1e10
 
-        return eps_k, U_k, tdm_k
+        return eps_k, U_k, prefactor*tdm_k
 
     def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=-1):
         """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors).
