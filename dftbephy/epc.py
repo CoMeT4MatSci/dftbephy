@@ -9,8 +9,6 @@ from phonopy.structure.cells import get_smallest_vectors
 from .units import *
 from .dftb import std_orbital_order
 
-print('*** USING NEW EPC EQUATIONS ***')
-
 try:
     from .extensions import calculate_lattice_ft, calculate_lattice_ft_derivative, calc_g_loc_new, calc_g2_inner_new
 except ModuleNotFoundError:
