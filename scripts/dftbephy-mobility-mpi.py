@@ -100,16 +100,16 @@ if len(angular_momenta) == 0:
 # read section for conductivity calculations
 mob_dict = check_hsd_input(inp_dict, 'Conductivities')
 
-if 'CRTA'in rt_dict.keys():
+if 'CRTA' in mob_dict.keys():
     rta_method = 'CRTA'
     mob_dict = mob_dict['CRTA']
-if 'SERTA'in rt_dict.keys():
+elif 'SERTA' in mob_dict.keys():
     rta_method = 'SERTA'
     mob_dict = mob_dict['SERTA']
 else:
     if rank==0:
         print('-- unsupported method for RelaxationTimes.')
-        quit()
+    quit()
 
 default_mesh = {'Mesh': {'npoints': [1, 1, 1], 'refinement': 1, 'shift': [0.0,0.0,0.0]}}
 
@@ -131,35 +131,35 @@ if 'Mesh' in kp_dict.keys():
     
 kvec0 = np.array(k_mesh_shift) # reference k-point for electrons
 
-band_sel = rt_dict.get('bands', None)
+band_sel = mob_dict.get('bands', None)
 if type(band_sel) is list:
     band_sel[1] = band_sel[1]+1
 
-if type(rt_dict['mu']) is dict:
-    m = rt_dict['mu']['Range']
-    mu_list = np.arange(float(m[0]), float(m[1]), int(m[2]))
-elif type(rt_dict['mu']) is list:
-    mu_list = rt_dict['mu']
-elif type(rt_dict['mu']) is float:
-    mu_list = [rt_dict['mu']]
+if type(mob_dict['mu']) is dict:
+    m = mob_dict['mu']['Range']
+    mu_list = np.linspace(float(m[0]), float(m[1]), int(m[2]))
+elif type(mob_dict['mu']) is list:
+    mu_list = mob_dict['mu']
+elif type(mob_dict['mu']) is float:
+    mu_list = [mob_dict['mu']]
 else:
     if rank==0:
         print('-- unkown type for mu (neither Range, list or float).')
-        quit()
+    quit()
 
-kBT0 = rt_dict.get('temperature', 0.0259)
+kBT0 = mob_dict.get('temperature', 0.0259)
 assert(type(kBT0) is float)
 
-sigma0 = rt_dict.get('sigma', 0.003)
+sigma0 = mob_dict.get('sigma', 0.003)
 assert(type(sigma0) is float)
 
-EF = rt_dict.get('Efermi', 0.00)
+EF = mob_dict.get('Efermi', 0.00)
 assert(type(EF) is float)
 
-Ecut = rt_dict.get('Ecut', 1.0)
+Ecut = mob_dict.get('Ecut', 1.0)
 assert(type(Ecut) is float)
 
-spin_factor = rt_dict.get('SpinDegeneracy', 1)
+spin_factor = mob_dict.get('SpinDegeneracy', 1)
 assert(type(spin_factor) is int)
 
 ###############################################################################
