@@ -1,5 +1,6 @@
 import os, sys
-sys.path.insert(0, '../') # adjust path to the base directory of the package
+#sys.path.insert(0, '../') # adjust path to the base directory of the package
+sys.path.insert(0, '/home/jupyter-acroy/Dev/dftbephy/') # adjust path to the base directory of the package
 
 # limit the number of threads for numpy
 os.environ["OMP_NUM_THREADS"] = "16" # export OMP_NUM_THREADS=16
@@ -51,6 +52,10 @@ def dfermi_deps(x):
     f = np.zeros_like(x)
     norm_ind = np.logical_and(x > -_FD_XMAX, x < _FD_XMAX)
     f[norm_ind] = -np.exp(x[norm_ind])/(np.exp(x[norm_ind]) + 1.)**2
+    return f
+
+def step(x):
+    f = np.where(x < 0., 1., 0.)
     return f
 
 ###############################################################################
@@ -317,7 +322,7 @@ for loc_ik, ik in enumerate(ks_per_rank[rank]):
         loc_velocities[loc_ik,n,:] = vel_k[:,n]
 
         for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
-            loc_densities[ic]  += (weights[ik]/nmeshpoints) * ( fermi((eps_k[n]-mu)/kBT) - fermi((eps_k[n]-EF)/kBT) )
+            loc_densities[ic]  += (weights[ik]/nmeshpoints) * ( fermi((eps_k[n]-mu)/kBT) - step(eps_k[n]-EF) )
             loc_densities0[ic] += (weights[ik]/nmeshpoints) * ( fermi((eps_k[n]-EF)/kBT) )                    
     
     # consider only k-points within a certain energy range for transport properties
