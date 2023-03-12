@@ -104,7 +104,7 @@ if type(band_sel) is list:
 
 if type(rt_dict['mu']) is dict:
     m = rt_dict['mu']['Range']
-    mu_list = np.arange(float(m[0]), float(m[1]), int(m[2]))
+    mu_list = np.linspace(float(m[0]), float(m[1]), int(m[2]))
 elif type(rt_dict['mu']) is list:
     mu_list = rt_dict['mu']
 elif type(rt_dict['mu']) is float:
@@ -112,7 +112,7 @@ elif type(rt_dict['mu']) is float:
 else:
     if rank==0:
         print('-- unkown type for mu (neither Range, list or float).')
-        quit()
+    quit()
 
 kBT0 = rt_dict.get('temperature', 0.0259)
 assert(type(kBT0) is float)
