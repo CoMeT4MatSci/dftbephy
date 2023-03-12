@@ -25,6 +25,8 @@ class DftbSuperCellCalc:
         self.sc2c = None
         self.sc2uc = None
 
+        self.Nsc = None
+        
         self.sc2idx = None
         self.uc2idx = None
 
@@ -46,6 +48,7 @@ class DftbSuperCellCalc:
         self.primitive = ph.get_primitive()
         self.supercell = ph.get_supercell()
         Nsc = self.supercell.get_supercell_matrix().diagonal().prod() # number of primitive cells in super cell
+        self.Nsc = Nsc
         Nuc = len(self.primitive) # number of atoms in primitive cell
         
         # map of atom in super cell to the cell index
@@ -152,8 +155,8 @@ class DftbSuperCellCalc:
         
         return bands
     
-    def calculate_velocity(self, kvec0):
-        """Calculate the electron velocities at kvec0.
+    def calculate_velocity(self, kvec0, band_sel=None):
+        """Calculate the electron velocities at kvec0. The electronic bands can be selected with band_sel=[band0,band1+1].
 
             returns: eps_k = electronic energies at kvec0 (nbands)
                      velocities_k = electron velocities at kvec0 (3,nbands)
@@ -172,17 +175,26 @@ class DftbSuperCellCalc:
 
         eps_k, U_k = linalg.eigh(h0_uc, b=s0_uc) # diagonalize Hamiltonian
         nbands = eps_k.shape[0] # no of electronic bands
+
+        if (type(band_sel) is list) and (len(band_sel) == 2):
+            band0 = max(band_sel[0], 0)
+            band1 = min(band_sel[1], nbands)
+            nbands = band1 - band0
+        else:
+            band0 = 0
+            band1 = nbands
+        
         velocities_k = np.zeros((3, nbands), float)
         for n in range(nbands):
-            u = U_k[:,n]
+            u = U_k[:,band0+n]
             for alpha in range(3):
-                velocities_k[alpha, n] = np.real( np.einsum('i,ij,j', u.conj(), dh0_dk[alpha], u) - eps_k[n]*np.einsum('i,ij,j', u.conj(), ds0_dk[alpha], u) )
+                velocities_k[alpha, n] = np.real( np.einsum('i,ij,j', u.conj(), dh0_dk[alpha], u) - eps_k[band0+n]*np.einsum('i,ij,j', u.conj(), ds0_dk[alpha], u) )
 
         # the derivative is with respect to fractional coordinates
         # thus, we have to convert it back to cartesian using
         #     k_cart = 2*pi*inv(cell)*k_frac
         velocities_k = (self.primitive.cell.T*BOHR__AA) @ velocities_k / (2*np.pi)
-        return eps_k, velocities_k
+        return eps_k[band0:band1], velocities_k
 
     # WORK IN PROGRESS!!
     def calculate_transition_dipole_moment(self, kvec0):
@@ -226,8 +238,8 @@ class DftbSuperCellCalc:
 
         return eps_k, U_k, prefactor*tdm_k
 
-    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=-1):
-        """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors).
+    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=None):
+        """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors). The electronic bands can be selected with band_sel=[band0,band1+1].
 
             returns: eps_k = electronic energies at kvec0 (nqpoints)
                      mesh_epskq =  electronic energies at kvec0+qpoints (nqpoints, nbands)
@@ -242,6 +254,16 @@ class DftbSuperCellCalc:
 
         return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
 
+    def get_num_bands(self):
+        """Return number of electronic bands.
+        """
+        if (self.supercell is None):
+            raise RuntimeError("Phonopy supercell not available. Use load_phonopy() first.")
+        
+        if (self.H0 is None) or (self.S0 is None):
+            raise RuntimeError("Reference Hamiltonian and Overlap Matrices not available. Run calculate_reference() first.")
+        return int(self.H0.shape[0]/self.Nsc)
+        
 
 # WORK IN PROGRESS!!
 class DftbMoleculeCalc:

@@ -144,4 +144,4 @@ def calculate_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvect
             # note: the prefactor does not contain Nsc
             calc_g2(mesh_g2, iq, lam, g_H_loc, g_S_k_loc, g_S_kq_loc, eps_k, eps_kq, U_k, U_kq.conj().T, hbar_amu_THz/(np.maximum(2*ph_om, 1e-5)), band0, band1)
                     
-    return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
+    return eps_k[band0:band1], mesh_epskq, mesh_epskmq, mesh_g2
