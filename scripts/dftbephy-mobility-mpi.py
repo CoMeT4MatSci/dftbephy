@@ -17,12 +17,13 @@ from phonopy.structure.grid_points import GridPoints
 from timeit import default_timer as timer
 
 from dftbephy import DftbSuperCellCalc
-from dftbephy.fileio import read_dftb_bands, get_lumo
 from dftbephy.analysis import inv_tau_nk
 from dftbephy.units import *
 from dftbephy.tools import printProgressBar
 
-import ase
+#import ase
+
+# for irreducible mesh
 import spglib
 
 # for reading hsd files
@@ -233,7 +234,7 @@ if rta_method == 'SERTA':
 ###############################################################################
 # 5 Calculate conductivity
 
-mus = np.array(mu_list)  # chemical potentials
+mus = EF + np.array(mu_list)  # chemical potentials
 kBTs = kBT0*np.ones_like(mus) # temperatures
 sigma_0 = sigma0 # smearing
 
@@ -246,18 +247,23 @@ if rank == 0:
     sys.stdout.flush()
 
     print('-- constructing k-mesh')
-    atoms = ase.Atoms(positions=dftb.primitive.get_positions()* BOHR__AA, 
-                      numbers=dftb.primitive.get_atomic_numbers(), 
-                      cell=dftb.primitive.get_cell()* BOHR__AA, 
-                      pbc=[1, 1, 1])
-    fromspglib = spglib.get_ir_reciprocal_mesh(k_mesh, atoms)
-
-    indices = np.unique(fromspglib[0]).tolist()
-    weights = np.array([list(fromspglib[0]).count(i) for i in indices], dtype='int')
-    kpoints = fromspglib[1] / float(nk)
-    kpoints = kpoints[indices,:]
+#    atoms = ase.Atoms(positions=dftb.primitive.get_positions()* BOHR__AA, 
+#                      numbers=dftb.primitive.get_atomic_numbers(), 
+#                      cell=dftb.primitive.get_cell()* BOHR__AA, 
+#                      pbc=[1, 1, 1])
+    fromspglib = spglib.get_ir_reciprocal_mesh(k_mesh, dftb.primitive)
+    
+    indices, weights = np.unique(fromspglib[0], return_counts=True)
+    weights = np.asarray(weights, dtype='int')
+    
+#    indices = np.unique(fromspglib[0]).tolist()
+#    weights = np.array([list(fromspglib[0]).count(i) for i in indices], dtype='int')
+    kpoints = fromspglib[1]
+    kpoints = kpoints[indices,:] / np.array(k_mesh)
     
     nkpoints = len(kpoints)
+    
+    print('-- number of irreducible k-points: %i' % (nkpoints))
 else:
     nkpoints = None
     
@@ -273,6 +279,7 @@ if rank != 0:
 comm.Bcast([kpoints, MPI.DOUBLE], root=0)
 comm.Bcast([weights, MPI.INT], root=0)
 
+    
 nmeshpoints = np.prod(k_mesh)
 
 if rta_method == 'SERTA':
