@@ -1,5 +1,6 @@
 # dftBephy
 Calculating electron-phonon couplings (EPCs) with DFTB.
+![dftbephy](logo.png)
 
 # Prerequisites
 
