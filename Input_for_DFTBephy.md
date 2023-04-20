@@ -76,7 +76,7 @@ This section includes the parameters for electron-phonon coupling calculations:
 ```    
 
 ### **RelaxationTimes{}** 
-Relaxation times can be calculated within constant relaxation time approximation (CRTA) or self-energy relaxation time approximation (SERTA). Regardless of which method is selected, q-point mesh must be defined in this section. *k*-points block is only necessary for SERTA{} method. Band selection is optional for both methods.  Additional properties for relaxation time calculations are as follows:
+Scattering rates are calculated within the self-energy relaxation time approximation (SERTA). *k*-point mesh must be defined in this section. Band selection is optional for both methods. Additional properties are as follows:
 
 | Name | Definition  | Default | 
 | ------ | ------ | ------ |
@@ -111,7 +111,7 @@ Relaxation times can be calculated within constant relaxation time approximation
 ```
 
 ### **Conductivities{}** 
-One of the CRTA{} or SERTA{} methods must be selected. The parameters in the *Relaxationtimes* section are defined in the same way in this section. Additional parameters are as follows:
+Conductivities can be calculated within the constant relaxation time approximation (CRTA) or SERTA. The constant relaxation time value is 1 ps. The parameters in the *Relaxationtimes* section are defined in the same way in this section. *q*-points block is only necessary for SERTA{} method. Additional parameters are as follows:
 
 | Name | Definition  | Default |
 | ------ | ------ | ------ |
