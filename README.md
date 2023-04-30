@@ -3,6 +3,11 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 
 ![dftbephy](logo.png)
 
+For more information see our article:
+> Croy, A., Unsal, E., Biele, R., Pecchia A. *DFTBephy: A DFTB-based approach for electron–phonon coupling calculations.* J Comput Electron (2023). 
+> doi:10.1007/s10825-023-02033-9 
+> [full-text access](https://rdcu.be/da2KC)
+
 # Prerequisites
 
 - numpy and scipy
@@ -24,12 +29,12 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 - A detailed information about DFTBephy input (dftbephy_in.hsd) can be found [here][dftbephyinput].
 
 # What you can get
-The main purpose of dftBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the electron relaxation-time (at the moment only within SERTA). The latter can be used as an input for BoltzTrap2 to calculate transport properties. The scripts/ directory contains some templates for computing
+The main purpose of dftBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the electron relaxation-time (at the moment only within SERTA). The latter can be used as an input for BoltzTrap2 to calculate transport properties. The scripts/ directory contains some programs and templates for computing
 - EPCs and relaxation times along a band path (q and k paths, respectively) -- graphene-ephline.py and graphene-lws.py -- the results are stored in a json file;
-- EPCs at k-point on a (fine) q-mesh -- graphene-epc.py -- the result is stored in a hdf5 file;
-- Relaxation times on a (fine) k-mesh -- graphene-relaxationtimes-fine.py -- the results are stored in a hdf5 file;
+- EPCs at k-point on a (fine) q-mesh -- dftbephy-epc.py -- the result is stored in a hdf5 file;
+- Relaxation times on a (fine) k-mesh -- dftbephy-relaxationtimes-mpi.py -- the results are stored in a hdf5 file;
 - Relaxation times as input for Boltztrap2 -- graphene-mobility-bt2.py -- the results are stored in a hdf5 file. For this script, ase and spglib are required;
-- Conductivity tensor -- graphene-mobility.py -- the results are stored in a json file. For this script, ase and spglib are required.
+- Conductivity tensor -- dftbephy-mobility-mpi.py -- the results are stored in a json file. For this script, spglib is required.
 
 See jupyter notebooks in notebooks/ for how to read, use and visualize the output.
 
