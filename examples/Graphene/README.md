@@ -6,7 +6,7 @@ This step is just the usual (tight) geometry optimization of the respective unit
 # Phonon calculations
 In the next step phonopy is used to obtain a supercell, the force constants and eventually the dynamical matrix. For this example, running the follwing code in the phonons directory
 ```
-cp ../geo_end.gen geo.gen
+cp ../opt/geo_end.gen geo.gen
 phonopy -d --dim="5 5 1" --amplitude=0.0005 --tolerance=1e-4 --dftb+
 
 # the last step should give files geo.genS, geo.genS-001 and phonopy_disp.yaml

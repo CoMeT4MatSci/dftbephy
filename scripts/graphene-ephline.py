@@ -139,7 +139,7 @@ for i in range(npaths):
     print('-- processing path %s to %s' % (path[i][0], path[i][1]))
     nqpoints = qpoints[i].shape[0]
 
-    eps_k, epskq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i])    
+    eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i])    
     
     bands.append(epskq)
     g_kq.append(np.sqrt(g2))

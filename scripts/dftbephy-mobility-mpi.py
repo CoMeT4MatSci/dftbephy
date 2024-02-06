@@ -1,6 +1,5 @@
 import os, sys
-#sys.path.insert(0, '../') # adjust path to the base directory of the package
-sys.path.insert(0, '/home/jupyter-acroy/Dev/dftbephy/') # adjust path to the base directory of the package
+sys.path.insert(0, '../') # adjust path to the base directory of the package
 
 # limit the number of threads for numpy
 os.environ["OMP_NUM_THREADS"] = "16" # export OMP_NUM_THREADS=16

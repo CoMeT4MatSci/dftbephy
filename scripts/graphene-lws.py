@@ -94,7 +94,7 @@ mesh_eigenvectors = mesh['eigenvectors']
 kvec0 = np.array([1/3, 2/3, 0])
 print('-- starting el-ph calculation ...')
 start = timer()
-eps_k, mesh_epskq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
+eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
 end = timer()
 print('-- finished (%4.1f s).' % (end-start))
 
@@ -128,7 +128,7 @@ for i in range(npaths):
 
     printProgressBar(0, nkpoints, prefix='k-point', suffix='complete')
     for ik, kvec in enumerate(kpoints[i]):
-        eps_k, mesh_epskq, mesh_g2 = dftb.calculate_g2(kvec, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
+        eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec, mesh_qpoints, mesh_frequencies, mesh_eigenvectors)
         
         for n in range(nbands):
             energies[ik,n] = eps_k[n]
