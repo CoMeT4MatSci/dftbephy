@@ -1,8 +1,6 @@
 import sys, os
-sys.path.insert(0, '../') # adjust path to the base directory of the package
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 import phonopy
 from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections

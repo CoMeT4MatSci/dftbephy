@@ -1,10 +1,14 @@
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
+from setuptools import setup, find_packages, Extension
 import numpy
 
+ext = Extension(name='dftbephy.extensions', sources=['dftbephy/extensions.pyx'],
+                language='c++',
+                include_dirs=[numpy.get_include()])
+
 setup(
-  name='dftbephy',
-  ext_modules=cythonize('dftbephy/extensions.pyx', annotate=True),
-  include_dirs=[numpy.get_include()]
+    name='dftbephy',
+    version='0.0.1',
+    packages=find_packages(),
+    ext_modules=[ext],
+    install_requires=['numpy', 'scipy', 'phonopy']
 )

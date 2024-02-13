@@ -1,5 +1,4 @@
 import os, sys
-sys.path.insert(0, '../') # adjust path to the base directory of the package
 
 import numpy as np
 import matplotlib.pyplot as plt
