@@ -14,7 +14,6 @@ from dftbephy.analysis import inv_tau_nk
 from dftbephy.units import *
 from dftbephy.tools import printProgressBar
 
-import ase
 import spglib
 
 # this is needed for writing json files
@@ -138,17 +137,12 @@ for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
     print(ic, mu, kBT)
 
 print('-- constructing k-mesh')
-atoms = ase.Atoms(positions=dftb.primitive.get_positions()* BOHR__AA, 
-                  numbers=dftb.primitive.get_atomic_numbers(), 
-                  cell=dftb.primitive.get_cell()* BOHR__AA, 
-                  pbc=[1, 1, 1])
-fromspglib = spglib.get_ir_reciprocal_mesh([nk, nk, 1], atoms)
+fromspglib = spglib.get_ir_reciprocal_mesh([nk, nk, 1], dftb.primitive)
 
-indices = np.unique(fromspglib[0]).tolist()
-weights = [list(fromspglib[0]).count(i) for i in indices]
-kpoints = fromspglib[1] / float(nk)
-kpoints = kpoints[indices,:]
-
+indices, weights = np.unique(fromspglib[0], return_counts=True)
+weights = np.asarray(weights, dtype='int')
+kpoints = fromspglib[1]
+kpoints = kpoints[indices,:] / np.array([nk, nk, 1])
 
 nmeshpoints = np.prod([nk, nk, 1])
 nkpoints = len(kpoints)
