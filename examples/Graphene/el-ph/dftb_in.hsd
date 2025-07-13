@@ -30,5 +30,5 @@ Options {
 }  
 
 Analysis = {
-  CalculateForces = Yes
+  PrintForces = Yes
 }  
