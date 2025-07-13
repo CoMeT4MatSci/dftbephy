@@ -17,3 +17,6 @@ phonopy -d --dim="5 5 1" --amplitude=0.0005 --tolerance=1e-4 --dftb+
 phonopy -f disp-0*/results.tag --dftb+
 ```
 will give the neccesary input for dftBephy.
+
+# dftBephy calculations
+See [the description in the wiki](https://github.com/CoMeT4MatSci/dftbephy/wiki/Calculations) for setting up calculations of the electron-phonon coupling, relaxation time, and conductivity.
