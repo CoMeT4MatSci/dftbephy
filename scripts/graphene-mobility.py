@@ -137,7 +137,11 @@ for ic, (kBT, mu) in enumerate(zip(kBTs, mus)):
     print(ic, mu, kBT)
 
 print('-- constructing k-mesh')
-fromspglib = spglib.get_ir_reciprocal_mesh([nk, nk, 1], dftb.primitive)
+cell = dftb.primitive.get_cell()* BOHR__AA, \
+       dftb.primitive.get_positions()* BOHR__AA, \
+       dftb.primitive.get_atomic_numbers()
+
+fromspglib = spglib.get_ir_reciprocal_mesh([nk, nk, 1], cell)
 
 indices, weights = np.unique(fromspglib[0], return_counts=True)
 weights = np.asarray(weights, dtype='int')

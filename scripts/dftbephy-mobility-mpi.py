@@ -245,17 +245,14 @@ if rank == 0:
     sys.stdout.flush()
 
     print('-- constructing k-mesh')
-#    atoms = ase.Atoms(positions=dftb.primitive.get_positions()* BOHR__AA, 
-#                      numbers=dftb.primitive.get_atomic_numbers(), 
-#                      cell=dftb.primitive.get_cell()* BOHR__AA, 
-#                      pbc=[1, 1, 1])
-    fromspglib = spglib.get_ir_reciprocal_mesh(k_mesh, dftb.primitive)
+    cell = dftb.primitive.get_cell()* BOHR__AA, \
+       dftb.primitive.get_positions()* BOHR__AA, \
+       dftb.primitive.get_atomic_numbers()
+
+    fromspglib = spglib.get_ir_reciprocal_mesh(k_mesh, cell)
     
     indices, weights = np.unique(fromspglib[0], return_counts=True)
-    weights = np.asarray(weights, dtype='int')
-    
-#    indices = np.unique(fromspglib[0]).tolist()
-#    weights = np.array([list(fromspglib[0]).count(i) for i in indices], dtype='int')
+    weights = np.asarray(weights, dtype='int')    
     kpoints = fromspglib[1]
     kpoints = kpoints[indices,:] / np.array(k_mesh)
     
