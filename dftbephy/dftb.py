@@ -148,7 +148,7 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
                         output.write(final_output)
 
                     # run dftb+
-                    run_dftb(binary, reffile)
+                    run_dftb(binary)
 
                     # read template file
                     with open('dftb_in.template') as t:
