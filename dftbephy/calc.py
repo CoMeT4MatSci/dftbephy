@@ -88,8 +88,10 @@ class DftbSuperCellCalc:
         self.H_derivs = None
         self.S_derivs = None
             
-    def calculate_reference(self):
+    def calculate_reference(self, scc=False):
         """Obtain Hamiltonian and overlap matrix for the supercell from DFTB. This system serves as a unperturbed reference.
+
+            scc: Perform SCC calculation to obtain charges before getting the matrices (boolean).
         """
         if (self.supercell is None):
             raise RuntimeError("Phonopy supercell not available. Use load_phonopy() first.")
@@ -100,15 +102,16 @@ class DftbSuperCellCalc:
         origin = np.array([0., 0., 0.])
         latvecs = self.supercell.get_cell()*BOHR__AA
 
-        calculate_reference('dftb+', 'geo.gen.template', coords, specienames, species, origin, latvecs)
+        calculate_reference('dftb+', 'geo.gen.template', coords, specienames, species, origin, latvecs, scc)
         self.H0 = read_hamsqr1()
         self.S0 = read_oversqr()
         
-    def calculate_derivatives(self, disp=0.001):
+    def calculate_derivatives(self, disp=0.001, scc=False):
         """Calculate derivatives of Hamiltonian and overlap matrix via finite-differences. All atoms in the primitive cell are displaced
             in all cartesian directions by disp (in Angstrom).
 
             disp: amount of displacement in Angstrom (scalar)
+            scc: Perform SCC calculation to obtain charges for each displacement before getting the matrices (boolean).
         """
         if (self.supercell is None):
             raise RuntimeError("Phonopy supercell not available. Use load_phonopy() first.")
@@ -120,7 +123,7 @@ class DftbSuperCellCalc:
         latvecs = self.supercell.get_cell()*BOHR__AA
         
         self.H_derivs, self.S_derivs = calculate_hamiltonian_derivs(
-                'dftb+', disp, self.uc2sc, coords, specienames, species, origin, latvecs)
+                'dftb+', disp, self.uc2sc, coords, specienames, species, origin, latvecs, scc)
     
     def calculate_band_structure(self, kpoints):
         """Calculate the electronic band-structure at the given k-points.
