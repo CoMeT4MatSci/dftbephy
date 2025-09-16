@@ -163,8 +163,10 @@ def read_sqr(filename, nkpt = 1):
        returns: hamiltonian/overlap matrix (nallorbitals * nallorbitals)
     """         
     with open(filename) as f:
+        # firt line is '#      REAL   NALLORB   NKPOINT'
         first_line = f.readline()
-        second_line = f.readline()
+        # second line gives the respective values (the # in the beginning is for convenience)
+        second_line = f.readline().strip('#')
     
     temp_dat = second_line.split()
 

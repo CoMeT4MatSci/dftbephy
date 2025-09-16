@@ -105,7 +105,7 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
 
     with open('hamsqr1.dat') as f:
         first_line = f.readline()
-        second_line = f.readline()
+        second_line = f.readline().strip('#')
 
     temp_dat = second_line.split()
 

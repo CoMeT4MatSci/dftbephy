@@ -17,8 +17,8 @@ except ModuleNotFoundError:
     from .fourier import calculate_lattice_ft, calculate_lattice_ft_derivative
 
 class DftbSuperCellCalc:
-    def __init__(self, angular_momenta):
-        
+    def __init__(self, angular_momenta, cmd='dftb+'):
+
         self.supercell = None
         self.primitive = None
         self.uc2sc = None
@@ -34,6 +34,7 @@ class DftbSuperCellCalc:
         self.multi = None
         
         self.angular_momenta = angular_momenta
+        self.cmd = cmd
         
         self.H0 = None
         self.S0 = None
@@ -102,7 +103,7 @@ class DftbSuperCellCalc:
         origin = np.array([0., 0., 0.])
         latvecs = self.supercell.get_cell()*BOHR__AA
 
-        calculate_reference('dftb+', 'geo.gen.template', coords, specienames, species, origin, latvecs, scc)
+        calculate_reference(self.cmd, None, coords, specienames, species, origin, latvecs, scc)
         self.H0 = read_hamsqr1()
         self.S0 = read_oversqr()
         
@@ -123,7 +124,7 @@ class DftbSuperCellCalc:
         latvecs = self.supercell.get_cell()*BOHR__AA
         
         self.H_derivs, self.S_derivs = calculate_hamiltonian_derivs(
-                'dftb+', disp, self.uc2sc, coords, specienames, species, origin, latvecs, scc)
+                self.cmd, disp, self.uc2sc, coords, specienames, species, origin, latvecs, scc)
     
     def calculate_band_structure(self, kpoints):
         """Calculate the electronic band-structure at the given k-points.
