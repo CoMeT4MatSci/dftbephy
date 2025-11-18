@@ -3,10 +3,16 @@ Calculating electron-phonon couplings (EPCs) with DFTB.
 
 ![dftbephy](logo.png)
 
-For more information see our article:
-> Croy, A., Unsal, E., Biele, R., Pecchia A. *DFTBephy: A DFTB-based approach for electron–phonon coupling calculations.* J Comput Electron (2023). 
+For more information see our articles:
+> Croy, A., Unsal, E., Biele, R., Pecchia A. *DFTBephy: A DFTB-based approach for electron–phonon coupling calculations.* J Comput Electron, 22, 1231 (2023). 
 > doi:10.1007/s10825-023-02033-9 
-> [full-text access](https://rdcu.be/da2KC)
+> [full-text access](https://link.springer.com/article/10.1007/s10825-023-02033-9)
+
+> Unsal, E., Pecchia A., Croy, A., Cuniberti, G. *Charge carrier mobilities in γ-graphynes: a computational approach.* Nanoscale, 17, 24591 (2025). 
+> doi:10.1039/D5NR02989A
+> [full-text access](https://pubs.rsc.org/en/content/articlelanding/2025/nr/d5nr02989a)
+
+The BibTeX entries are available in [`references.bib`](https://github.com/CoMeT4MatSci/dftbephy/blob/master/references.bib).
 
 # Prerequisites
 
