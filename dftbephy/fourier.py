@@ -55,7 +55,7 @@ def calculate_lattice_double_ft_derivative(ham_derivs, kvec, kvec2, uc2sc, sc2uc
     """    
     norbitals = uc2idx[len(uc2sc)]
     ndisp = ham_derivs.shape[0] # number of displaced atoms in reference cell
-    l0 = sc2c[0]  # cell idx of reference cell
+    l0 = sc2c[uc2sc[0]]  # cell idx of reference cell
 
     dHdR = np.zeros((ndisp, 3, norbitals, norbitals), dtype=complex)
     for i in np.arange(len(sc2uc)): # atoms in sc

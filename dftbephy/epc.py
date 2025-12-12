@@ -164,17 +164,16 @@ def calc_g_loc_scc(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_kq, dSdR_k, dSdR_kq, ph_
             m_sp = np.sqrt(uc_masses[sp])
             phase_sp = np.exp(2j*np.pi*pos_qvec[sp])/m_sp
 
+            for alpha in range(3): # cartesian coordinates
+                g_S_k_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]  += phase_s*ph_ev[s,alpha] * dSdR_k[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
+                g_S_kq_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] -= phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
+
             for spp in range(nuc): # atoms in unit cell
                 m_spp = np.sqrt(uc_masses[spp])
                 phase_spp = np.exp(2j*np.pi*pos_qvec[spp])/m_spp
 
                 for alpha in range(3): # cartesian coordinates
                     g_H_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += phase_spp*ph_ev[spp,alpha] * dHdR_kq[spp,alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
-
-                    if s == spp:
-                        g_S_k_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]  += phase_s*ph_ev[s,alpha] * dSdR_k[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
-                    if sp == spp:
-                        g_S_kq_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] -= phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
 
 
 def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, uc2sc, sc2uc, sc2c, supercell, primitive, angular_momenta, ham0, S0, ham_derivs, ovr_derivs):
@@ -186,7 +185,7 @@ def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigen
                 eps(kvec + q) = electronic band-energies at kvec + qvec (shape: (nqpoints, nbands))
                 mesh_g2 = absolute square of g_{mn}^lambda(kvec0, q) (shape: (nqpoints, nmodes, nbands, nbands))
     """
-    print('-- INFO: using scc EPC calculation --')
+    print('-- INFO: using scc EPC calculation v2 --')
     
     orbitals = [sum([std_orbital_order[am] for am in angular_momenta[cs]], []) for cs in supercell.get_chemical_symbols()]
     norbitals = [len(o) for o in orbitals]
