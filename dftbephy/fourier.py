@@ -48,6 +48,36 @@ def calculate_lattice_ft_derivative(ham_derivs, kvec, uc2sc, sc2uc, sc2c, uc2idx
             dHdR[:, uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += ham_derivs[s, :, sc2idx[i]:sc2idx[i+1],sc2idx[j]:sc2idx[j+1]]* phase
     return dHdR
 
+def calculate_lattice_double_ft_derivative(ham_derivs, kvec, kvec2, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi):
+    """Calculate double Fourier transform of supercell hamiltonian/overlap matrix derivative ham_derivs at k-points kvec and kvec2.        
+       
+       returns: complex matrix dH/dR(s'', dir, kvec, kvec2)
+    """    
+    norbitals = uc2idx[len(uc2sc)]
+    ndisp = ham_derivs.shape[0] # number of displaced atoms in reference cell
+    l0 = sc2c[0]  # cell idx of reference cell
+
+    dHdR = np.zeros((ndisp, 3, norbitals, norbitals), dtype=complex)
+    for i in np.arange(len(sc2uc)): # atoms in sc
+        s = sc2uc[i] # atom idx in uc
+        l = sc2c[i]  # cell idx
+        
+        mul = multi[l,sc2uc[l0]]
+        vecs = svecs[l,sc2uc[l0],:mul]
+        phase = np.exp(-2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+
+        for j in np.arange(len(sc2uc)): # atoms in sc
+            sp = sc2uc[j] # atom idx in uc
+            lp = sc2c[j]  # cell idx
+            
+            mul2 = multi[lp,sc2uc[l0]]
+            vecs2 = svecs[lp,sc2uc[l0],:mul2]
+            phase2 = np.exp(2j*np.pi*np.dot( vecs2, kvec2)).sum()/mul2
+
+            dHdR[:, :, uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += ham_derivs[:, :, sc2idx[i]:sc2idx[i+1], sc2idx[j]:sc2idx[j+1]] * phase * phase2
+    return dHdR
+
+
 def calculate_lattice_ft_kderivative(ham0, kvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi):
     """Calculate Fourier transform of supercell hamiltonian/overlap matrix ham0 at k-point kvec. 
        

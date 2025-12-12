@@ -7,7 +7,7 @@ from .units import *
 from .atomic import *
 from .fileio import read_hamsqr1, read_oversqr, read_tagfile, readgen
 from .dftb import std_orbital_order, calculate_reference, calculate_hamiltonian_derivs
-from .epc import calculate_g2
+from .epc import calculate_g2, calculate_scc_g2
 from .fourier import calculate_lattice_ft_kderivative
 
 try:
@@ -242,7 +242,7 @@ class DftbSuperCellCalc:
 
         return eps_k, U_k, prefactor*tdm_k
 
-    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=None):
+    def calculate_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=None, scc=False):
         """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors). The electronic bands can be selected with band_sel=[band0,band1+1].
 
             returns: eps_k = electronic energies at kvec0 (nqpoints)
@@ -253,8 +253,12 @@ class DftbSuperCellCalc:
             raise RuntimeError("Reference Hamiltonian and Overlap matrices not available. Run calculate_reference() first.")
         if (self.H_derivs is None) or (self.S_derivs is None):
             raise RuntimeError("Derivatives of Hamiltonian and Overlap matrices not available. Run calculate_derivatives() first.")
-            
-        eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
+
+        if scc==True:
+            eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_scc_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
+
+        else:
+            eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
 
         return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
 
