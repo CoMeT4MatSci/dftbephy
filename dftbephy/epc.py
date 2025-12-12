@@ -166,7 +166,7 @@ def calc_g_loc_scc(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_kq, dSdR_k, dSdR_kq, ph_
 
             for alpha in range(3): # cartesian coordinates
                 g_S_k_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]  += phase_s*ph_ev[s,alpha] * dSdR_k[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
-                g_S_kq_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] -= phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
+                g_S_kq_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
 
             for spp in range(nuc): # atoms in unit cell
                 m_spp = np.sqrt(uc_masses[spp])
