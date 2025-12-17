@@ -1,8 +1,5 @@
 import numpy as np
 
-from phonopy.structure.cells import get_smallest_vectors
-
-from .dftb import std_orbital_order
 
 def calculate_lattice_ft(ham0, kvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi):
     """Calculate Fourier transform of supercell hamiltonian/overlap matrix ham0 at k-point kvec. 

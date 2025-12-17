@@ -111,59 +111,68 @@ def calculate_lattice_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, 
                         dHdR_view[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] = dHdR_view[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] + ham_derivs[s,alpha,sc2idx[i]+ns,sc2idx[j]+nsp] * phase
     return dHdR
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def calculate_lattice_double_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, double[:] kvec2, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, int[:,:] multi):
+    """Calculate double Fourier transform of supercell hamiltonian/overlap matrix derivative ham_derivs at k-points kvec and kvec2.        
+       
+       returns: complex matrix dH/dR(s'', dir, kvec, kvec2)
+    """    
+    cdef Py_ssize_t nsc = sc2uc.shape[0]
+    cdef Py_ssize_t nuc = uc2sc.shape[0]
+    cdef Py_ssize_t norbitals = uc2idx[nuc]
+    cdef Py_ssize_t ndisp = ham_derivs.shape[0]
+
+    dHdR = np.zeros((ndisp, 3, norbitals, norbitals), dtype=np.complex128)    
+    cdef double complex[:,:,:,:] dHdR_view = dHdR
+
+    cdef Py_ssize_t ni, m, i, j, s, l, l0, sp, lp, ns, nsp, alpha
+    cdef int mul, mul2
+    cdef double complex phase, phase2
+    cdef double dot_vk
+
+    l0 = sc2c[uc2sc[0]] # cell idx of reference cell
+    for i in range(nsc): # atoms in sc
+        s = sc2uc[i]
+        l = sc2c[i]
+
+        mul = multi[l,sc2uc[l0]]
+        phase = 0. + 0.j
+        for m in range(mul):
+            dot_vk  = svecs[l,sc2uc[l0],m,0] * kvec[0]
+            dot_vk += svecs[l,sc2uc[l0],m,1] * kvec[1]
+            dot_vk += svecs[l,sc2uc[l0],m,2] * kvec[2]
+            phase += exp(-TWO_PI_I*dot_vk)
+        phase = phase/mul
+
+        for j in range(nsc): # atoms in sc
+            sp = sc2uc[j]
+            lp = sc2c[j]
+            
+            mul2 = multi[lp,sc2uc[l0]]
+            phase2 = 0. + 0.j
+            for m in range(mul):
+                dot_vk  = svecs[lp,sc2uc[l0],m,0] * kvec2[0]
+                dot_vk += svecs[lp,sc2uc[l0],m,1] * kvec2[1]
+                dot_vk += svecs[lp,sc2uc[l0],m,2] * kvec2[2]
+                phase2 += exp(TWO_PI_I*dot_vk)
+            phase2 = phase2/mul2
+
+            for spp in range(ndisp):
+                for alpha in range(3): # cartesian components
+                    for ns in range(uc2idx[s+1]-uc2idx[s]):
+                        for nsp in range(uc2idx[sp+1]-uc2idx[sp]):
+                            dHdR_view[spp,alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] = dHdR_view[spp,alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] + ham_derivs[spp,alpha,sc2idx[i]+ns,sc2idx[j]+nsp] * phase * phase2
+    return dHdR
+
 ##################################
 # epc
-
+          
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def calc_g_loc(complex[:,:] g_H_loc, complex[:,:] g_S_loc, complex[:,:,:] dHdR_k, complex[:,:,:] dSdR_k, complex[:,:,:] dHdR_kq, complex[:,:,:] dSdR_kq, complex[:,:] ph_ev, long [:] uc2idx, double[:] uc_masses, double[:] pos_qvec):
-
-    cdef Py_ssize_t nuc = ph_ev.shape[0]
-
-    cdef double complex[:,:] g_H_view = g_H_loc
-    cdef double complex[:,:] g_S_view = g_S_loc
-    cdef Py_ssize_t s, sp, ns, nsp, alpha
-    cdef double m_s, m_sp
-    cdef double complex phase_s, phase_sp
-
-    for s in range(nuc): # atoms in unit cell
-        m_s = sqrt(uc_masses[s])
-        phase_s = exp(TWO_PI_I*pos_qvec[s])/m_s
-
-        for sp in range(nuc): # atoms in unit cell
-            m_sp = sqrt(uc_masses[sp])
-            phase_sp = exp(TWO_PI_I*pos_qvec[sp])/m_sp
-
-            for ns in range(uc2idx[s+1]-uc2idx[s]):
-                for nsp in range(uc2idx[sp+1]-uc2idx[sp]):
-                    g_H_view[uc2idx[s]+ns,uc2idx[sp]+nsp] = 0. + 0.j
-                    g_S_view[uc2idx[s]+ns,uc2idx[sp]+nsp] = 0. + 0.j
-                    for alpha in range(3): # cartesian coordinates
-                        g_H_view[uc2idx[s]+ns,uc2idx[sp]+nsp] += phase_s*ph_ev[s,alpha] * dHdR_k[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] - phase_sp*ph_ev[sp,alpha] * dHdR_kq[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp]
-                        g_S_view[uc2idx[s]+ns,uc2idx[sp]+nsp] += phase_s*ph_ev[s,alpha] * dSdR_k[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp] - phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]+ns,uc2idx[sp]+nsp]
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def calc_g2_inner(double[:,:,:,:] mesh_g2, long iq, long lam, complex[:,:] gH, complex[:,:] gS, double[:] eps_k, double prefactor, long band0, long band1):
-    cdef double[:,:,:,:] mesh_g2_view = mesh_g2
-
-    cdef Py_ssize_t nbands = mesh_g2.shape[2]
-    cdef Py_ssize_t jband, kband, k, j
-    cdef double g2
-    for j in range(nbands):
-        jband = j + band0
-        for k in range(nbands):
-            kband = k + band0
-            g2 = prefactor * abs(gH[jband,kband] - eps_k[kband]*gS[jband,kband])**2
-            mesh_g2_view[iq, lam, j, k] = g2
-
-# NEW EQUATIONS
-            
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-def calc_g_loc_new(complex[:,:] g_H_loc, complex[:,:] g_S_k_loc, complex[:,:] g_S_kq_loc, complex[:,:,:] dHdR_k, complex[:,:,:] dSdR_k, complex[:,:,:] dHdR_kq, complex[:,:,:] dSdR_kq, complex[:,:] ph_ev, long [:] uc2idx, double[:] uc_masses, double[:] pos_qvec):
+def calc_g_loc(complex[:,:] g_H_loc, complex[:,:] g_S_k_loc, complex[:,:] g_S_kq_loc, complex[:,:,:] dHdR_k, complex[:,:,:] dSdR_k, complex[:,:,:] dHdR_kq, complex[:,:,:] dSdR_kq, complex[:,:] ph_ev, long [:] uc2idx, double[:] uc_masses, double[:] pos_qvec):
 
     cdef Py_ssize_t nuc = ph_ev.shape[0]
 
@@ -194,7 +203,7 @@ def calc_g_loc_new(complex[:,:] g_H_loc, complex[:,:] g_S_k_loc, complex[:,:] g_
             
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def calc_g2_inner_new(double[:,:,:,:] mesh_g2, long iq, long lam, complex[:,:] gH, complex[:,:] gS_k, complex[:,:] gS_kq, double[:] eps_k, double[:] eps_kq, double prefactor, long band0, long band1):
+def calc_g2_inner(double[:,:,:,:] mesh_g2, long iq, long lam, complex[:,:] gH, complex[:,:] gS_k, complex[:,:] gS_kq, double[:] eps_k, double[:] eps_kq, double prefactor, long band0, long band1):
     cdef double[:,:,:,:] mesh_g2_view = mesh_g2
 
     cdef Py_ssize_t nbands = mesh_g2.shape[2]
@@ -240,6 +249,7 @@ def calc_g2(double[:,:,:,:] mesh_g2, long iq, long lam, complex[:,:] g_H_loc, co
 
 ##################################
 # analysis
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)

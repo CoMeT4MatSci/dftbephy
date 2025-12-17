@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg
 
-import multiprocessing as mp
+#import multiprocessing as mp
 #from multiprocessing import shared_memory
 
 from phonopy.structure.cells import get_smallest_vectors
@@ -9,15 +9,14 @@ from phonopy.structure.cells import get_smallest_vectors
 from .units import *
 from .dftb import std_orbital_order
 
-from .fourier import calculate_lattice_double_ft_derivative
 
 try:
-    from .extensions import calculate_lattice_ft, calculate_lattice_ft_derivative, calc_g_loc_new, calc_g2_inner_new
+    from .extensions import calculate_lattice_ft, calculate_lattice_ft_derivative, calculate_lattice_double_ft_derivative, calc_g_loc, calc_g2_inner
 except ModuleNotFoundError:
     print('Warning: C-extensions not available')
-    from .fourier import calculate_lattice_ft, calculate_lattice_ft_derivative
+    from .fourier import calculate_lattice_ft, calculate_lattice_ft_derivative, calculate_lattice_double_ft_derivative
 
-    def calc_g_loc_new(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_k, dSdR_k, dHdR_kq, dSdR_kq, ph_ev, uc2idx, uc_masses, pos_qvec):
+    def calc_g_loc(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_k, dSdR_k, dHdR_kq, dSdR_kq, ph_ev, uc2idx, uc_masses, pos_qvec):
 
         nuc = ph_ev.shape[0]
         g_H_loc.fill(0. + 0j)
@@ -37,8 +36,7 @@ except ModuleNotFoundError:
                     g_S_k_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += phase_s*ph_ev[s,alpha] * dSdR_k[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] 
                     g_S_kq_loc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += phase_sp*ph_ev[sp,alpha] * dSdR_kq[alpha,uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]]
 
-    
-    def calc_g2_inner_new(mesh_g2, iq, lam, gH, gS_k, gS_kq, eps_k, eps_kq, prefactor, band0, band1):
+    def calc_g2_inner(mesh_g2, iq, lam, gH, gS_k, gS_kq, eps_k, eps_kq, prefactor, band0, band1):
         nbands = mesh_g2.shape[2]
         for j, jband in enumerate(range(band0,band1)):
             for k, kband in enumerate(range(band0,band1)):
@@ -51,7 +49,7 @@ def calc_g2(mesh_g2, iq, lam, g_H_loc, g_S_k_loc, g_S_kq_loc, eps_k, eps_kq, U_k
     gS_k = U_kq_H @ g_S_k_loc @ U_k
     gS_kq = U_kq_H @ g_S_kq_loc @ U_k
 
-    calc_g2_inner_new(mesh_g2, iq, lam, gH, gS_k, gS_kq, eps_k, eps_kq, prefactor, band0, band1)
+    calc_g2_inner(mesh_g2, iq, lam, gH, gS_k, gS_kq, eps_k, eps_kq, prefactor, band0, band1)
 
 
 
@@ -140,7 +138,7 @@ def calculate_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvect
             ph_ev = mesh_eigenvectors[iq][:,lam].reshape((-1,3))
 
             # get partial el-ph coupling matrices in local basis
-            calc_g_loc_new(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_k, dSdR_k, dHdR_kq, dSdR_kq, ph_ev, uc2idx, uc_masses, pos_qvec)
+            calc_g_loc(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_k, dSdR_k, dHdR_kq, dSdR_kq, ph_ev, uc2idx, uc_masses, pos_qvec)
 
             # transform local el-ph coupling matrix to eigenbasis
             # note: the prefactor does not contain Nsc
@@ -150,7 +148,6 @@ def calculate_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigenvect
 
 
 def calc_g_loc_scc(g_H_loc, g_S_k_loc, g_S_kq_loc, dHdR_kq, dSdR_k, dSdR_kq, ph_ev, uc2idx, uc_masses, pos_qvec):
-
     nuc = ph_ev.shape[0]
     g_H_loc.fill(0. + 0j)
     g_S_k_loc.fill(0. + 0j)
@@ -244,7 +241,7 @@ def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigen
         s0_uc = calculate_lattice_ft(S0, kvec0 + qvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
         eps_kq, U_kq = linalg.eigh(h0_uc, b=s0_uc) # diagonalize Hamiltonian
         for iband in range(U_kq.shape[1]): # fix gauge by choosing first element of each vector to be real
-            U_kq[:,iband] = U_kq[:,iband] * np.exp( -1j * np.angle(U_kq[0,iband]) )        
+            U_kq[:,iband] = U_kq[:,iband] * np.exp( -1j * np.angle(U_kq[0,iband]) )
         dHdR_kq = calculate_lattice_double_ft_derivative(ham_derivs, kvec0 + qvec, kvec0, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
         dSdR_kq = calculate_lattice_ft_derivative(ovr_derivs, kvec0 + qvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
         
