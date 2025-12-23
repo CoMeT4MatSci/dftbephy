@@ -46,6 +46,9 @@ def calculate_reference(binary, reffile, coords, specienames, species, origin,
 
         # run dftb+
         run_dftb(binary, reffile)
+
+        # copy charges.bin for later
+        os.system('cp charges.bin charges0.bin')
     
         # read template file
         with open('dftb_in.template') as t:
@@ -104,7 +107,7 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
     """
 
     with open('hamsqr1.dat') as f:
-        first_line = f.readline()
+        _ = f.readline()
         second_line = f.readline().strip('#')
 
     temp_dat = second_line.split()
@@ -124,6 +127,12 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
     overlap = np.empty((2, NALLORB, NALLORB), dtype=float)
     ovr_derivs = np.empty((len(atom_ids), 3, NALLORB, NALLORB), dtype=float)
 
+    # check if charges from reference calculation exist
+    if os.path.isfile('charges0.bin'):
+        read_ref_charges = 'Yes'
+    else:
+        read_ref_charges = 'No'
+
     for ino, iat in enumerate(atom_ids): # iterate over atoms
     
         for ii in range(3): # iterate over cartesian coordinates
@@ -139,9 +148,13 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
                     with open('dftb_in.template') as t:
                         template = string.Template(t.read())
 
+                    # copy charges0.bin from reference calculation
+                    if read_ref_charges[0] == 'Y':
+                        os.system('cp charges0.bin charges.bin')
+
                     # setup for scc calculation
                     final_output = template.substitute(maxscciterations=100, 
-                                                       readinitialcharges='No', 
+                                                       readinitialcharges=read_ref_charges, 
                                                        writehs='No')
                     # write file
                     with open('dftb_in.hsd', 'w') as output:
