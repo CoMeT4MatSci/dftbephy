@@ -45,6 +45,11 @@ if len(angular_momenta) == 0:
         print('-- angular momenta per element have to be specified.')
     quit()
 
+# read section for Phonopy
+phonopy_dict = inp_dict.get('Phonopy', {})
+phonopy_yaml    = phonopy_dict.get('yaml_file', 'phonopy_disp.yaml')
+phonopy_symprec = phonopy_dict.get('symprec', None)
+
 # read section for epc calculations
 epc_dict = check_hsd_input(inp_dict, 'EPCs')
 
@@ -70,7 +75,13 @@ calculate_velocities = epc_dict.get('velocities', False)
 # 1 Load phonopy
 print('-- looking for phonopy results in %s' % (basedir + phonopy_dir))
 os.chdir(basedir + phonopy_dir)
-ph = phonopy.load('phonopy_disp.yaml')
+
+if phonopy_symprec is None:
+    ph = phonopy.load(phonopy_yaml)
+    print("-- using Phonopy's default symmetry precision.")
+else:
+    ph = phonopy.load(phonopy_yaml, symprec=phonopy_symprec)
+    print("-- symmetry precision set to", phonopy_symprec)
 
 ###############################################################################
 # 2 Initialize DFTB calculator
