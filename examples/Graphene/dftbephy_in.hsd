@@ -1,0 +1,88 @@
+DFTBephy {
+    base_dir = /home/service/workspace/graphene/
+    phonopy_dir = phonons/
+    working_dir = el-ph/
+
+    name = graphene
+
+    angularmomenta = {
+        C = {s p}
+    }
+
+   Bands {
+        path = {
+             0.0        0.0       0.0
+            -0.5       -0.5       0.0
+            -0.666667  -0.333333  0.0
+             0.0        0.0       0.0
+        }
+
+        labels = { G M K G }
+        npoints = 21
+
+    }
+
+    EPCs {
+        kvec0 = -0.64566667 -0.32283333 0.0
+        ##### only for EPC calc. on mesh ######
+        qpoints = Mesh {
+            npoints = 200 200 1
+            refinement = 10
+        }
+#        bands = 3 4
+        velocities = no
+        #######################################
+
+        #### only for EPC calc. along path ####
+        path = {
+             0.0        0.0       0.0
+            -0.5       -0.5       0.0
+            -0.666667  -0.333333  0.0
+             0.0        0.0       0.0
+        }
+        labels = { G M K G }
+        npoints = 51
+        ########################################
+    }
+
+    RelaxationTimes = SERTA {
+        qpoints = Mesh {
+            npoints = 200 200 1
+            refinement = 10
+        }
+        kpoints = Mesh {
+            npoints = 16 16 1
+            refinement = 20
+            shift = -0.64566667 -0.32283333 0.0
+        }
+        Efermi [eV] = -4.6585
+        mu [eV] = { 0.1 }
+        sigma [eV] = 0.003
+        temperature [eV] = 0.0259
+   }
+
+     Conductivities = SERTA {
+        kpoints = Mesh {
+            npoints = 400 400 1
+            shift = -0.64566667 -0.32283333 0.0
+            refinement = 20
+        }
+        ############## only for SERTA ###########
+        qpoints = Mesh {
+            npoints = 200 200 1
+            refinement = 10
+        }
+        #########################################
+
+        Efermi [eV] = -4.6585
+        bands = 3 4
+        mu [eV] = Range { 0.0 0.40 40 }
+        temperature [eV] = 0.0259
+
+        sigma [eV] = 0.003
+        # Ecut is relative to Efermi
+        Ecut [eV] = 1.0
+        SpinDegeneracy = 2
+    }
+
+}
