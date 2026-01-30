@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
- #   paths:
- #   - wiki/docs/**
+    paths:
+    - wiki/docs/**
 
 jobs:
   deploy-book:
