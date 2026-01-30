@@ -1,0 +1,22 @@
+format: jb-book
+root: main/about
+
+chapters:
+
+  - file: main/installation
+
+  - file: main/dftbephy_usage
+
+  - file: examples/graphene-nonSCC/index
+    sections:
+      - file: examples/graphene-nonSCC/notebooks/bands
+      - file: examples/graphene-nonSCC/notebooks/epc
+      - file: examples/graphene-nonSCC/notebooks/scatterings
+      - file: examples/graphene-nonSCC/notebooks/transport
+
+  - file: documentation/index
+    sections:
+      - file: documentation/inputfile
+      - file: documentation/sourcecode
+      - file: documentation/publications
+

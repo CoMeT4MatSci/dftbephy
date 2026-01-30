@@ -1,0 +1,36 @@
+title: DFTBephy Wiki
+author: ""
+copyright: "2023, DFTBephy developers"
+
+only_build_toc_files: true
+
+execute:
+  execute_notebooks: "off"
+
+bibtex_bibfiles:
+  - literature.bib
+
+html:
+  favicon: logo/dftbephy-favicon.png
+
+sphinx:
+  recursive_update: true        # keep default JB settings
+  config:
+    project: DFTBephy Wiki
+    html_title: DFTBephy Wiki
+    html_theme: sphinx_book_theme
+    html_logo: logo/dftbephy-logo.png
+    html_theme_options:
+      logo:
+        text: "DFTBephy Wiki"   # with logo
+      show_navbar_depth: 2
+    html_last_updated_fmt: "%b %d, %Y"
+    html_sidebars:
+      "**":
+        - "navbar-logo.html"          # logo + title at the very top
+        - "search-button-field.html"  # search bar directly under the logo
+        - "sbt-sidebar-nav.html"      # navigation tree below the search
+    html_static_path: ["_static"]
+    html_css_files:
+      - custom.css
+    bibtex_reference_style: author_year
