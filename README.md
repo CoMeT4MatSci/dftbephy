@@ -1,7 +1,7 @@
 # dftBephy
 Calculating electron-phonon couplings (EPCs) with DFTB.
 
-![dftbephy](logo.png)
+![dftbephy](wiki/docs/logodftbephy-logo.png)
 
 For more information see our articles:
 > Croy, A., Unsal, E., Biele, R., Pecchia A. *DFTBephy: A DFTB-based approach for electron–phonon coupling calculations.* J Comput Electron, 22, 1231 (2023). 
