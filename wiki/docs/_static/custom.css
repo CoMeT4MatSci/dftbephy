@@ -1,0 +1,14 @@
+/* Make all sidebar items use the same weight and font size */
+.bd-sidebar .bd-links a,
+.bd-sidebar .bd-links .caption,
+.bd-sidebar .bd-links .caption span {
+  font-weight: 600 !important;   /* 400 = normal weight */
+}
+
+/* Ensure the current page and its parents do not appear bolder */
+.bd-sidebar .bd-links .current > a,
+.bd-sidebar .bd-links .current > .reference {
+  font-weight: 600 !important;   
+}
+
+
