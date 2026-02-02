@@ -1,4 +1,4 @@
-See the guide on our wiki for how to set up and run calculations: [Graphene (non-SCC) example ](https://comet4matsci.github.io/dftbephy/examples/graphene-nonSCC/notebooks/bands.html)
+See the guide on our wiki for how to set up and run calculations: [Graphene (non-SCC) example ](https://comet4matsci.github.io/dftbephy/examples/graphene-nonSCC/index.html)
 
 Before running DFTBephy, first perform the geometry optimization and phonon calculations to generate the required input files.
 
