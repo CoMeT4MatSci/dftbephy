@@ -17,8 +17,12 @@ def calculate_lattice_ft(ham0, kvec, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, 
             lp = sc2c[j]
             
             mul = multi[lp,sc2uc[l]]
-            vecs = svecs[lp,sc2uc[l],:mul]
-            phase = np.exp(2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+            #vecs = svecs[lp,sc2uc[l],:mul]
+            #phase = np.exp(2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+            phase = 0.0j
+            for m in range(mul):
+                phase += np.exp(2j*np.pi*np.dot( svecs[lp,sc2uc[l],m], kvec))
+            phase /= mul
 
             h0_uc[uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += ham0[sc2idx[i]:sc2idx[i+1],sc2idx[j]:sc2idx[j+1]] * phase
     return h0_uc
@@ -39,8 +43,12 @@ def calculate_lattice_ft_derivative(ham_derivs, kvec, uc2sc, sc2uc, sc2c, uc2idx
             lp = sc2c[j]
             
             mul = multi[lp,sc2uc[l]]
-            vecs = svecs[lp,sc2uc[l],:mul]
-            phase = np.exp(2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+            #vecs = svecs[lp,sc2uc[l],:mul]
+            #phase = np.exp(2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+            phase = 0.0j
+            for m in range(mul):
+                phase += np.exp(2j*np.pi*np.dot( svecs[lp,sc2uc[l],m], kvec))
+            phase /= mul
             
             dHdR[:, uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += ham_derivs[s, :, sc2idx[i]:sc2idx[i+1],sc2idx[j]:sc2idx[j+1]]* phase
     return dHdR
@@ -60,16 +68,24 @@ def calculate_lattice_double_ft_derivative(ham_derivs, kvec, kvec2, uc2sc, sc2uc
         l = sc2c[i]  # cell idx
         
         mul = multi[l,sc2uc[l0]]
-        vecs = svecs[l,sc2uc[l0],:mul]
-        phase = np.exp(-2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+        #vecs = svecs[l,sc2uc[l0],:mul]
+        #phase = np.exp(-2j*np.pi*np.dot( vecs, kvec)).sum()/mul
+        phase = 0.0j
+        for m in range(mul):
+            phase += np.exp(-2j*np.pi*np.dot( svecs[l,sc2uc[l0],m], kvec))
+        phase /= mul
 
         for j in np.arange(len(sc2uc)): # atoms in sc
             sp = sc2uc[j] # atom idx in uc
             lp = sc2c[j]  # cell idx
             
             mul2 = multi[lp,sc2uc[l0]]
-            vecs2 = svecs[lp,sc2uc[l0],:mul2]
-            phase2 = np.exp(2j*np.pi*np.dot( vecs2, kvec2)).sum()/mul2
+            #vecs2 = svecs[lp,sc2uc[l0],:mul2]
+            #phase2 = np.exp(2j*np.pi*np.dot( vecs2, kvec2)).sum()/mul2
+            phase2 = 0.0j
+            for m in range(mul2):
+                phase2 += np.exp(2j*np.pi*np.dot( svecs[lp,sc2uc[l0],m], kvec2))
+            phase2 /= mul2
 
             dHdR[:, :, uc2idx[s]:uc2idx[s+1],uc2idx[sp]:uc2idx[sp+1]] += ham_derivs[:, :, sc2idx[i]:sc2idx[i+1], sc2idx[j]:sc2idx[j+1]] * phase * phase2
     return dHdR
