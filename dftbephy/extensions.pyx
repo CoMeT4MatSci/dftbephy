@@ -152,7 +152,7 @@ def calculate_lattice_double_ft_derivative(double[:,:,:,:] ham_derivs, double[:]
             
             mul2 = multi[lp,sc2uc[l0]]
             phase2 = 0. + 0.j
-            for m in range(mul):
+            for m in range(mul2):
                 dot_vk  = svecs[lp,sc2uc[l0],m,0] * kvec2[0]
                 dot_vk += svecs[lp,sc2uc[l0],m,1] * kvec2[1]
                 dot_vk += svecs[lp,sc2uc[l0],m,2] * kvec2[2]
