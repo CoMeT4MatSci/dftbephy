@@ -285,9 +285,9 @@ if rank==0:
         el_grp = f.create_group('el')
         elph_grp = f.create_group('el-ph')
 
-        ds = struct_grp.create_dataset('positions', data=dftb.primitive.get_positions()* BOHR__AA)
-        ds = struct_grp.create_dataset('numbers', data=dftb.primitive.get_atomic_numbers())
-        ds = struct_grp.create_dataset('cell', data=dftb.primitive.get_cell()* BOHR__AA)
+        ds = struct_grp.create_dataset('positions', data=dftb.primitive.positions* BOHR__AA)
+        ds = struct_grp.create_dataset('numbers', data=dftb.primitive.numbers)
+        ds = struct_grp.create_dataset('cell', data=dftb.primitive.cell* BOHR__AA)
         
         ds = elph_grp.create_dataset('linewidths', data=inv_taus_)
         ds.attrs['kBTs'] = kBTs
