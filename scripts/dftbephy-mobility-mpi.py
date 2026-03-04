@@ -256,9 +256,9 @@ if rank == 0:
     sys.stdout.flush()
 
     print('-- constructing k-mesh')
-    cell = dftb.primitive.get_cell()* BOHR__AA, \
-       dftb.primitive.get_positions()* BOHR__AA, \
-       dftb.primitive.get_atomic_numbers()
+    cell = dftb.primitive.cell * BOHR__AA, \
+       ddftb.primitive.positions * BOHR__AA, \
+       dftb.primitive.numbers
 
     fromspglib = spglib.get_ir_reciprocal_mesh(k_mesh, cell)
     
