@@ -179,7 +179,7 @@ nkp = 0
 ik = 0
 with h5py.File('el-ph-Nq%i-K-bandsel.hdf5' % (q_mesh[0]), 'w') as f:
     ph_grp = f.create_group('ph')
-    ph_grp.attrs['mesh'] = ph._mesh.get_mesh_numbers()
+    ph_grp.attrs['mesh'] = ph._mesh.mesh_numbers
     ds = ph_grp.create_dataset('omega', data=mesh_frequencies*THZ__EV)
     ds = ph_grp.create_dataset('qpoints', data=mesh_qpoints)
     ds = ph_grp.create_dataset('qpointsCart', data=qvecs)    
