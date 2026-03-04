@@ -368,7 +368,7 @@ comm.Reduce( [loc_conductivities0, MPI.DOUBLE], [conductivities0, MPI.DOUBLE], o
 
 
 if rank==0:
-    cell = ph.primitive.get_cell() * BOHR__AA
+    cell = ph.primitive.cell * BOHR__AA
     cell_area = np.linalg.norm(np.cross(cell[0],cell[1]))
 
     # generate output as json

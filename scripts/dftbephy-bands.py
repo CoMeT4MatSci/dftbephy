@@ -153,7 +153,7 @@ for i in range(npaths):
     vels.append(velocities)
 
 # convert q-points to cartesian coordinates
-primitive_cell = dftb.primitive.get_cell() * BOHR__AA
+primitive_cell = dftb.primitive.cell * BOHR__AA
 a0 = np.linalg.norm(primitive_cell[0,:])
 
 reciprocal_lattice = np.linalg.inv(primitive_cell)

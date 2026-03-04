@@ -46,17 +46,17 @@ class DftbSuperCellCalc:
 
             ph: Phonopy object
         """
-        self.primitive = ph.get_primitive()
-        self.supercell = ph.get_supercell()
-        Nsc = self.supercell.get_supercell_matrix().diagonal().prod() # number of primitive cells in super cell
+        self.primitive = ph.primitive
+        self.supercell = ph.supercell
+        Nsc = self.supercell.supercell_matrix.diagonal().prod() # number of primitive cells in super cell
         self.Nsc = Nsc
         Nuc = len(self.primitive) # number of atoms in primitive cell
         
         # map of atom in super cell to the cell index
         self.sc2c = np.tile(np.arange(0,Nsc), Nuc)
 
-        uc2uc = self.supercell.get_unitcell_to_unitcell_map()
-        self.sc2uc = np.array([uc2uc[at] for at in self.supercell.get_supercell_to_unitcell_map()])
+        uc2uc = self.supercell.u2u_map # get_unitcell_to_unitcell_map()
+        self.sc2uc = np.array([uc2uc[at] for at in self.supercell.s2u_map]) # get_supercell_to_unitcell_map()
         
         # indices of primitive cell atoms in the super cell:
         # ideally, we would use
@@ -68,7 +68,7 @@ class DftbSuperCellCalc:
             self.uc2sc[i] = self.uc2sc[i-1] + Nsc
 
         # obtain a map of atom index to Hamiltonian index
-        orbitals = [sum([std_orbital_order[am] for am in self.angular_momenta[cs]], []) for cs in self.supercell.get_chemical_symbols()]
+        orbitals = [sum([std_orbital_order[am] for am in self.angular_momenta[cs]], []) for cs in self.supercell.symbols]
         norbitals = [len(o) for o in orbitals]
         self.sc2idx = np.insert(np.cumsum(norbitals), 0, 0)    
 
@@ -77,8 +77,8 @@ class DftbSuperCellCalc:
         self.uc2idx = np.insert(np.cumsum(norbitals), 0, 0)    
 
         # get vectors between atoms in primitive cell coordinates
-        self.svecs, self.multi = get_smallest_vectors(self.supercell.get_cell(), self.supercell.scaled_positions, self.supercell.scaled_positions[self.uc2sc] )
-        trans_mat_float = np.dot(self.supercell.get_cell(), np.linalg.inv(self.primitive.get_cell()))
+        self.svecs, self.multi = get_smallest_vectors(self.supercell.cell, self.supercell.scaled_positions, self.supercell.scaled_positions[self.uc2sc] )
+        trans_mat_float = np.dot(self.supercell.cell, np.linalg.inv(self.primitive.cell))
         trans_mat = np.rint(trans_mat_float).astype(int)
         assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
         self.svecs = np.array(np.dot(self.svecs, trans_mat), dtype="double", order="C")
@@ -97,11 +97,11 @@ class DftbSuperCellCalc:
         if (self.supercell is None):
             raise RuntimeError("Phonopy supercell not available. Use load_phonopy() first.")
             
-        coords = self.supercell.get_positions() * BOHR__AA
-        specienames = list(dict.fromkeys(self.supercell.get_chemical_symbols()))
-        species = [specienames.index(sym) for sym in self.supercell.get_chemical_symbols()]
+        coords = self.supercell.positions * BOHR__AA
+        specienames = list(dict.fromkeys(self.supercell.symbols))
+        species = [specienames.index(sym) for sym in self.supercell.symbols]
         origin = np.array([0., 0., 0.])
-        latvecs = self.supercell.get_cell()*BOHR__AA
+        latvecs = self.supercell.cell*BOHR__AA
 
         calculate_reference(self.cmd, None, coords, specienames, species, origin, latvecs, scc)
         self.H0 = read_hamsqr1()
@@ -117,11 +117,11 @@ class DftbSuperCellCalc:
         if (self.supercell is None):
             raise RuntimeError("Phonopy supercell not available. Use load_phonopy() first.")
             
-        coords = self.supercell.get_positions() * BOHR__AA
-        specienames = list(dict.fromkeys(self.supercell.get_chemical_symbols()))
-        species = [specienames.index(sym) for sym in self.supercell.get_chemical_symbols()]
+        coords = self.supercell.positions * BOHR__AA
+        specienames = list(dict.fromkeys(self.supercell.symbols))
+        species = [specienames.index(sym) for sym in self.supercell.symbols]
         origin = np.array([0., 0., 0.])
-        latvecs = self.supercell.get_cell()*BOHR__AA
+        latvecs = self.supercell.cell*BOHR__AA
         
         self.H_derivs, self.S_derivs = calculate_hamiltonian_derivs(
                 self.cmd, disp, self.uc2sc, coords, specienames, species, origin, latvecs, scc)
@@ -140,7 +140,7 @@ class DftbSuperCellCalc:
             raise RuntimeError("Reference Hamiltonian and Overlap Matrices not available. Run calculate_reference() first.")
         
         npaths = len(kpoints)
-        orbitals = [sum([std_orbital_order[am] for am in self.angular_momenta[cs]], []) for cs in self.supercell.get_chemical_symbols()]
+        orbitals = [sum([std_orbital_order[am] for am in self.angular_momenta[cs]], []) for cs in self.supercell.symbols]
         uc_orbitals = [orbitals[i] for i in self.uc2sc]
         nbands = sum([len(o) for o in uc_orbitals])
         
