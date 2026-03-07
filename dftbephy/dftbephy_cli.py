@@ -1,10 +1,12 @@
 import os
 import argparse
+import numpy as np
 
 import phonopy
 
 from timeit import default_timer as timer
 
+import dftbephy
 from dftbephy import DftbSuperCellCalc
 from dftbephy.units import *
 from dftbephy.tools import printProgressBar
@@ -30,7 +32,7 @@ def convert(x):
 commands = [('init',  'Prepare calculations.'),
             ('bands', 'Calculate electronic band-structure and phonon dispersions along a path.'),
             ('epc',   'Calculate electron-phonon coupling matrix on a mesh.'),
-            ('ephline'), 'Calculate electron-phonon coupling matrix along a path.']
+            ('ephline', 'Calculate electron-phonon coupling matrix along a path.')]
             
 #            ('relaxationtimes', 'Calculate relaxation times.'),
 #            ('mobility'), 'Calculate transport properties.']
@@ -45,14 +47,27 @@ def main(arguments=None):
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    for cmd, desc in commands:
+    for (cmd, desc) in commands:
         p = subparsers.add_parser(cmd, description=desc)
 
     args = parser.parse_args()
 
 
     ############# START #############
-    hsdinput = hsd.load("dftbephy_in.hsd")
+    #
+    print('     _______  __            __       ')
+    print(' ___/ / _/ /_/ /  ___ ___  / /  __ __')
+    print('/ _  / _/ __/ _ \\/ -_) _ \\/ _ \\/ // /')
+    print('\\_,_/_/ \\__/_.__/\\__/ .__/_//_/\\_, / ')
+    print('                   /_/        /___/  ')
+    print('v%s' % dftbephy.__version__)
+    print('')
+
+    try:
+        hsdinput = hsd.load("dftbephy_in.hsd")
+    except:
+        print('ERROR: You have to provide an input file dftbephy_in.hsd')
+        return
 
     inp_dict = check_hsd_input(hsdinput, 'DFTBephy')
     assert(type(inp_dict) is dict)
@@ -147,6 +162,7 @@ def run_init(ph, angular_momenta, basedir, phonopy_dir, working_dir, results_dir
     
     return dftb
 
+
 def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir):
     import json
     from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections
@@ -176,6 +192,7 @@ def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     # call dftbephy to use get_num_bands
     npaths = len(kpoints)
     nbands = dftb.get_num_bands()
+    print(dftb.H0.shape, dftb.Nsc, nbands)
 
     # rund electronic band-structure calculation
     bands = []
@@ -227,7 +244,7 @@ def run_calc_ph_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
 
     path_nodes = bands_dict.get('path', [])
     labels = bands_dict.get('labels', [])
-    npoints = bands_dict.get('npoints', 21)  #21 is the default
+    npoints = bands_dict.get('npoints', 21)  # 21 is the default
 
     ############################################
     # to get the path as in the previous version
@@ -295,7 +312,7 @@ def run_calc_ph_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     a0 = np.linalg.norm(primitive_cell[0,:])
 
     reciprocal_lattice = np.linalg.inv(primitive_cell)
-    qvecs = a0*np.vstack(kpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
+    qvecs = a0*np.vstack(qpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
     
     # generate output as json
     bs_dict = { 'particleType': 'phonon', 'numModes': frequencies[0].shape[1], 'frequencies': np.vstack(frequencies)*THZ__EV, 'frequencyUnit': 'eV',
@@ -386,7 +403,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
     ik = 0
     with h5py.File('el-ph-Nq%i-K-bandsel.hdf5' % (q_mesh[0]), 'w') as f:
         ph_grp = f.create_group('ph')
-        ph_grp.attrs['mesh'] = ph._mesh.get_mesh_numbers()
+        ph_grp.attrs['mesh'] = ph._mesh.mesh_numbers
         ds = ph_grp.create_dataset('omega', data=mesh_frequencies*THZ__EV)
         ds = ph_grp.create_dataset('qpoints', data=mesh_qpoints)
         ds = ph_grp.create_dataset('qpointsCart', data=qvecs)    

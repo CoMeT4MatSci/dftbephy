@@ -17,6 +17,9 @@ dependencies = [
     "h5py"
 ]
 
+[project.scripts]
+dftbephy = "dftbephy.dftbephy_cli:main"
+
 [project.urls]
 "Homepage" = "https://github.com/CoMeT4MatSci/dftbephy"
 "Bug Tracker" = "https://github.com/CoMeT4MatSci/dftbephy/issues"
