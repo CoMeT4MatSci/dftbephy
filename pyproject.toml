@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dftbephy"
-version = "0.0.1"
+version = "0.2.0"
 authors = [{name="Alexander Croy", email="alexander.croy@uni-jena.de"}]
 description = "Calculating electron-phonon couplings (EPCs) with DFTB."
 readme = "README.md"
 dependencies = [
     "numpy",
     "scipy",
-    "phonopy<=2.48",
+    "phonopy>=3.0.0",
     "spglib<2.7",
     "h5py"
 ]
