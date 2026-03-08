@@ -24,7 +24,7 @@ DTYPE = np.float64
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def calculate_lattice_ft(double[:,:] ham0, double[:] kvec, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, long[:,:] multi):
+def calculate_lattice_ft(double[:,:] ham0, double[:] kvec, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, int[:,:] multi):
     """Calculate Fourier transform of supercell hamiltonian/overlap matrix ham0 at k-point kvec. 
        Information about the supercell and the primitive cell are obtained from phonopy's supercell and primitive.
        
@@ -38,7 +38,7 @@ def calculate_lattice_ft(double[:,:] ham0, double[:] kvec, long[:] uc2sc, long[:
     cdef double complex[:,:] h0_view = h0_uc
 
     cdef Py_ssize_t ni, m, i, j, s, l, sp, lp, ns, nsp
-    cdef long mul
+    cdef int mul
     cdef double complex phase
     cdef double dot_vk
 
@@ -69,7 +69,7 @@ def calculate_lattice_ft(double[:,:] ham0, double[:] kvec, long[:] uc2sc, long[:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def calculate_lattice_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, long[:,:] multi):
+def calculate_lattice_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, int[:,:] multi):
     """Calculate Fourier transform of supercell hamiltonian/overlap matrix derivative ham_derivs at k-point kvec. 
        Information about the supercell and the primitive cell are obtained from phonopy's supercell and primitive.
        
@@ -83,7 +83,7 @@ def calculate_lattice_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, 
     cdef double complex[:,:,:] dHdR_view = dHdR
 
     cdef Py_ssize_t ni, m, i, j, s, l, sp, lp, ns, nsp, alpha
-    cdef long mul
+    cdef int mul
     cdef double complex phase
     cdef double dot_vk
 

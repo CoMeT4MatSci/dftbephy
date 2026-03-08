@@ -11,9 +11,8 @@ readme = "README.md"
 dependencies = [
     "numpy",
     "scipy",
-    "phonopy",
-    "ase",
-    "spglib",
+    "phonopy<=2.48",
+    "spglib<2.7",
     "h5py"
 ]
 
