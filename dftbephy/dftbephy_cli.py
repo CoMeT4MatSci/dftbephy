@@ -140,11 +140,12 @@ def main(arguments=None):
 
     name = inp_dict.get('name', '')
 
-    angular_momenta = inp_dict.get('angularmomenta', {})
+    # read section for DFTB
+    dftb_dict = inp_dict.get('DFTB', {})
+    angular_momenta = dftb_dict.get('angularmomenta', {})
     if len(angular_momenta) == 0:
-        if (rank==0):
-            print('-- angular momenta per element have to be specified.')
-        quit()
+        print('ERROR: angular momenta per element have to be specified.')
+        return
     
     # read section for Phonopy
     phonopy_dict = inp_dict.get('Phonopy', {})
@@ -157,10 +158,10 @@ def main(arguments=None):
 
     if phonopy_symprec is None:
         ph = phonopy.load(phonopy_yaml)
-        print("-- using Phonopy's default symmetry precision.")
+        print("-- using phonopy's default symmetry precision.")
     else:
         ph = phonopy.load(phonopy_yaml, symprec=phonopy_symprec)
-        print("-- symmetry precision set to", phonopy_symprec)
+        print("-- phonopy's symmetry precision set to", phonopy_symprec)
 
 
     # 2 Initialize DFTB calculator
@@ -426,7 +427,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
         # read section for band-path for ephline
         path, path_labels, npoints = path_dict_to_paths(qp_dict['Path'])
     else:
-        print('-- no band specified in EPC section of the input file')
+        print('-- no band-path specified in EPC section of the input file')
         return
 
     k_mesh_shift = epc_dict.get('kvec0', [0., 0., 0.])

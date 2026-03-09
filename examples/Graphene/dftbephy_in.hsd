@@ -5,11 +5,13 @@ DFTBephy {
 
     name = graphene
 
-    angularmomenta = {
-        C = {s p}
+    DFTB = {
+        angularmomenta = {
+            C = {s p}
+        }
     }
 
-   Bands {
+    Bands {
         path = {
              0.0        0.0       0.0
             -0.5       -0.5       0.0
@@ -34,14 +36,16 @@ DFTBephy {
         #######################################
 
         #### only for EPC calc. along path ####
-        path = {
-             0.0        0.0       0.0
-            -0.5       -0.5       0.0
-            -0.666667  -0.333333  0.0
-             0.0        0.0       0.0
-        }
-        labels = { G M K G }
-        npoints = 51
+        #qpoints = Path {
+        #    path = {
+        #         0.0        0.0       0.0
+        #        -0.5       -0.5       0.0
+        #        -0.666667  -0.333333  0.0
+        #         0.0        0.0       0.0
+        #    }
+        #    labels = { G M K G }
+        #    npoints = 51
+        #}
         ########################################
     }
 

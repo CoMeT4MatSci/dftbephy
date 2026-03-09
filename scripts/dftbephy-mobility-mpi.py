@@ -90,7 +90,8 @@ results_dir = inp_dict.get('results_dir', working_dir)
 
 name = inp_dict.get('name', '')
 
-angular_momenta = inp_dict.get('angularmomenta', {})
+dftb_dict = inp_dict.get('DFTB', {})
+angular_momenta = dftb_dict.get('angularmomenta', {})
 if len(angular_momenta) == 0:
     if (rank==0):
         print('-- angular momenta per element have to be specified.')
