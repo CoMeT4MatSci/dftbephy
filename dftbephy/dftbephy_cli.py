@@ -26,7 +26,67 @@ def convert(x):
         return x.tolist()
     raise TypeError(x)
 
+def path_dict_to_paths(path_dict):
+    path_nodes = path_dict.get('path', [])
+    labels = path_dict.get('labels', [])
+    npoints = path_dict.get('npoints', 21)  # 21 is the default
 
+    ############################################
+    # to get the path as in the previous version
+    path = [
+        [path_nodes[i], path_nodes[i + 1]]
+        for i in range(len(path_nodes) - 1)
+    ]
+    path_labels = [
+        [labels[i], labels[i + 1]]
+        for i in range(len(labels) - 1)
+    ]
+    ############################################
+    
+    return path, path_labels, npoints
+
+def reorder_modes(ph_oms, ph_evs):
+    ######## reorder phonon modes ###########
+    ## based on the idea presented in https://quantumtinkerer.tudelft.nl/blog/connecting-the-dots/
+    ##
+    from scipy.optimize import linear_sum_assignment
+
+    npaths = len(ph_oms)
+    
+    ev_ref = ph_evs[0][0]
+    for lam in range(ev_ref.shape[1]):
+        ev_ref[:,lam] = ev_ref[:,lam] * np.exp( -1j * np.angle(ev_ref[0,lam]) )
+
+    sorted_freqs = []
+    sorted_evs = []
+    for pi in range(npaths):
+
+        sorted_freqs_path = []
+        sorted_evs_path = []
+        for i in range(ph_evs[pi].shape[0]):
+            eigvecs = ph_evs[pi][i]
+            for lam in range(eigvecs.shape[1]):
+                eigvecs[:,lam] = eigvecs[:,lam] * np.exp( -1j * np.angle(eigvecs[0,lam]) )
+            metric = np.abs(np.dot(ev_ref.conj().T, eigvecs))
+
+            assignment = linear_sum_assignment(-metric)[1]
+
+            sorted_freqs_path.append(ph_oms[pi][i][assignment])
+            sorted_evs_path.append(eigvecs[:, assignment])
+            ev_ref = eigvecs[:, assignment]
+
+        sorted_freqs.append(np.array(sorted_freqs_path))
+        sorted_evs.append(np.array(sorted_evs_path))
+    #########################################
+
+    return sorted_freqs, sorted_evs
+
+def cart_vecs(points, cell):
+    a0 = np.linalg.norm(cell[0,:])
+
+    reciprocal_lattice = np.linalg.inv(cell)
+    # cartesian vectors in units of 2*np.pi/a0
+    return a0*np.vstack(points) @reciprocal_lattice.T 
 
 # commands and descritions for argparse
 commands = [('init',  'Prepare calculations.'),
@@ -169,22 +229,7 @@ def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     
     # read section for band calculations
     bands_dict = check_hsd_input(inp_dict, 'Bands')
-
-    path_nodes = bands_dict.get('path', [])
-    labels = bands_dict.get('labels', [])
-    npoints = bands_dict.get('npoints', 21)  #21 is the default
-
-    ############################################
-    # to get the path as in the previous version
-    path = [
-        [path_nodes[i], path_nodes[i + 1]]
-        for i in range(len(path_nodes) - 1)
-    ]
-    path_labels = [
-        [labels[i], labels[i + 1]]
-        for i in range(len(labels) - 1)
-    ]
-    ############################################
+    path, path_labels, npoints = path_dict_to_paths(bands_dict)
 
     # get k-points
     kpoints, connections = get_band_qpoints_and_path_connections(path, npoints=npoints)
@@ -192,7 +237,6 @@ def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     # call dftbephy to use get_num_bands
     npaths = len(kpoints)
     nbands = dftb.get_num_bands()
-    print(dftb.H0.shape, dftb.Nsc, nbands)
 
     # rund electronic band-structure calculation
     bands = []
@@ -218,10 +262,7 @@ def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
 
     # convert k-points to cartesian coordinates
     primitive_cell = dftb.primitive.cell * BOHR__AA
-    a0 = np.linalg.norm(primitive_cell[0,:])
-
-    reciprocal_lattice = np.linalg.inv(primitive_cell)
-    kvecs = a0*np.vstack(kpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
+    kvecs = cart_vecs(kpoints, primitive_cell)  # in units of 2*np.pi/a0
     
     # generate output as json
     bs_dict = { 'particleType': 'electron', 'numBands': bands[0].shape[1], 'energies': np.vstack(bands), 'energyUnit': 'eV', 
@@ -241,22 +282,7 @@ def run_calc_ph_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     
     # read section for band calculations
     bands_dict = check_hsd_input(inp_dict, 'Bands')
-
-    path_nodes = bands_dict.get('path', [])
-    labels = bands_dict.get('labels', [])
-    npoints = bands_dict.get('npoints', 21)  # 21 is the default
-
-    ############################################
-    # to get the path as in the previous version
-    path = [
-        [path_nodes[i], path_nodes[i + 1]]
-        for i in range(len(path_nodes) - 1)
-    ]
-    path_labels = [
-        [labels[i], labels[i + 1]]
-        for i in range(len(labels) - 1)
-    ]
-    ############################################
+    path, path_labels, npoints = path_dict_to_paths(bands_dict)
 
     # get q-points
     qpoints, connections = get_band_qpoints_and_path_connections(path, npoints=npoints)
@@ -269,50 +295,15 @@ def run_calc_ph_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     end = timer()
     print('-- finished (%4.1f s).' % (end-start))
 
-    ######## reorder phonon modes ###########
-    ## based on the idea presented in https://quantumtinkerer.tudelft.nl/blog/connecting-the-dots/
-    ##
-    from scipy.optimize import linear_sum_assignment
-
+    # reorder phonon modes
     ph_evs = bs_dict['eigenvectors']
     ph_oms = bs_dict['frequencies']
-
-    ev_ref = ph_evs[0][0]
-    for lam in range(ev_ref.shape[1]):
-        ev_ref[:,lam] = ev_ref[:,lam] * np.exp( -1j * np.angle(ev_ref[0,lam]) )
-
-    sorted_freqs = []
-    sorted_evs = []
-    for pi in range(npaths):
-
-        sorted_freqs_path = []
-        sorted_evs_path = []
-        for i in range(ph_evs[pi].shape[0]):
-            eigvecs = ph_evs[pi][i]
-            for lam in range(eigvecs.shape[1]):
-                eigvecs[:,lam] = eigvecs[:,lam] * np.exp( -1j * np.angle(eigvecs[0,lam]) )
-            metric = np.abs(np.dot(ev_ref.conj().T, eigvecs))
-
-            assignment = linear_sum_assignment(-metric)[1]
-
-            sorted_freqs_path.append(ph_oms[pi][i][assignment])
-            sorted_evs_path.append(eigvecs[:, assignment])
-            ev_ref = eigvecs[:, assignment]
-
-        sorted_freqs.append(np.array(sorted_freqs_path))
-        sorted_evs.append(np.array(sorted_evs_path))
-    #########################################
-
     qpoints= bs_dict['qpoints']
-    frequencies = sorted_freqs
-    eigenvectors = sorted_evs
+    frequencies, eigenvectors = reorder_modes(ph_oms, ph_evs)
 
     # convert q-points to cartesian coordinates
     primitive_cell = dftb.primitive.cell * BOHR__AA
-    a0 = np.linalg.norm(primitive_cell[0,:])
-
-    reciprocal_lattice = np.linalg.inv(primitive_cell)
-    qvecs = a0*np.vstack(qpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
+    qvecs = cart_vecs(qpoints, primitive_cell)  # in units of 2*np.pi/a0
     
     # generate output as json
     bs_dict = { 'particleType': 'phonon', 'numModes': frequencies[0].shape[1], 'frequencies': np.vstack(frequencies)*THZ__EV, 'frequencyUnit': 'eV',
@@ -376,10 +367,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
 
     # convert q-points to cartesian coordinates
     primitive_cell = dftb.primitive.cell * BOHR__AA
-    a0 = np.linalg.norm(primitive_cell[0,:])
-
-    reciprocal_lattice = np.linalg.inv(primitive_cell)
-    qvecs = a0*np.vstack(mesh_qpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
+    qvecs = cart_vecs(mesh_qpoints, primitive_cell)  # in units of 2*np.pi/a0
 
     # calculate velocities
     if calculate_velocities:
@@ -436,9 +424,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
     qp_dict = epc_dict.get('qpoints', default_mesh)
     if 'Path' in qp_dict.keys():
         # read section for band-path for ephline
-        path_nodes = qp_dict['Path'].get('path', [])
-        labels = qp_dict['Path'].get('labels', [])
-        npoints = qp_dict['Path'].get('npoints', 21)  # 21 is the default
+        path, path_labels, npoints = path_dict_to_paths(qp_dict['Path'])
     else:
         print('-- no band specified in EPC section of the input file')
         return
@@ -453,17 +439,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
 
     # TODO: currently ignored for ephline
     calculate_velocities = epc_dict.get('velocities', False)
-
-    # to get the path as in the previous version
-    path = [
-        [path_nodes[i], path_nodes[i + 1]]
-        for i in range(len(path_nodes) - 1)
-    ]
-    path_labels = [
-        [labels[i], labels[i + 1]]
-        for i in range(len(labels) - 1)
-    ]
-    
+  
     qpoints, connections = get_band_qpoints_and_path_connections(path, npoints=npoints)
     npaths = len(qpoints)   # number of paths
 
@@ -474,45 +450,11 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
     end = timer()
     print('-- finished (%4.1f s).' % (end-start))
 
-    ######## reorder phonon modes ###########
-    ## based on the idea presented in https://quantumtinkerer.tudelft.nl/blog/connecting-the-dots/
-    ##
-    from scipy.optimize import linear_sum_assignment
-
+    # reorder phonon modes
     ph_evs = bs_dict['eigenvectors']
     ph_oms = bs_dict['frequencies']
-
-    npaths = len(ph_oms)
-
-    ev_ref = ph_evs[0][0]
-    for lam in range(ev_ref.shape[1]):
-        ev_ref[:,lam] = ev_ref[:,lam] * np.exp( -1j * np.angle(ev_ref[0,lam]) )
-
-    sorted_freqs = []
-    sorted_evs = []
-    for pi in range(npaths):
-
-        sorted_freqs_path = []
-        sorted_evs_path = []
-        for i in range(ph_evs[pi].shape[0]):
-            eigvecs = ph_evs[pi][i]
-            for lam in range(eigvecs.shape[1]):
-                eigvecs[:,lam] = eigvecs[:,lam] * np.exp( -1j * np.angle(eigvecs[0,lam]) )
-            metric = np.abs(np.dot(ev_ref.conj().T, eigvecs))
-
-            assignment = linear_sum_assignment(-metric)[1]
-
-            sorted_freqs_path.append(ph_oms[pi][i][assignment])
-            sorted_evs_path.append(eigvecs[:, assignment])
-            ev_ref = eigvecs[:, assignment]
-
-        sorted_freqs.append(np.array(sorted_freqs_path))
-        sorted_evs.append(np.array(sorted_evs_path))
-    #########################################
-
     qpoints= bs_dict['qpoints']
-    frequencies = sorted_freqs
-    eigenvectors = sorted_evs
+    frequencies, eigenvectors = reorder_modes(ph_oms, ph_evs)
 
     bands = []
     g_kq = []
@@ -527,10 +469,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
 
     # convert q-points to cartesian coordinates
     primitive_cell = dftb.primitive.cell * BOHR__AA
-    a0 = np.linalg.norm(primitive_cell[0,:])
-
-    reciprocal_lattice = np.linalg.inv(primitive_cell)
-    qvecs = a0*np.vstack(qpoints) @reciprocal_lattice.T # in units of 2*np.pi/a0
+    qvecs = cart_vecs(qpoints, primitive_cell)  # in units of 2*np.pi/a0
 
     # generate output as json
     ephl_dict = { 'numBands': bands[0].shape[1], 'energies': np.vstack(bands), 'energyUnit': 'eV',
