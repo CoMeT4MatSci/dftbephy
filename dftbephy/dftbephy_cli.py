@@ -18,7 +18,7 @@ def check_hsd_input(inp_dict, name):
     if name in inp_dict.keys():
         ret_dict = inp_dict[name]
     else:
-        print('-- ERROR: %s not found in input file.')
+        print('ERROR: %s not found in input file.')
     return ret_dict
 
 def convert(x):
@@ -146,6 +146,11 @@ def main(arguments=None):
     if len(angular_momenta) == 0:
         print('ERROR: angular momenta per element have to be specified.')
         return
+    dftb_cmd = dftb_dict.get('cmd', None)
+    if not ((dftb_cmd is None) or (isinstance(dftb_cmd, str))):
+        print('ERROR: invalid cmd.')
+        return
+        
     
     # read section for Phonopy
     phonopy_dict = inp_dict.get('Phonopy', {})
@@ -158,14 +163,14 @@ def main(arguments=None):
 
     if phonopy_symprec is None:
         ph = phonopy.load(phonopy_yaml)
-        print("-- using phonopy's default symmetry precision.")
+        print(" - using phonopy's default symmetry precision.")
     else:
         ph = phonopy.load(phonopy_yaml, symprec=phonopy_symprec)
-        print("-- phonopy's symmetry precision set to", phonopy_symprec)
+        print(" - phonopy's symmetry precision set to", phonopy_symprec)
 
 
     # 2 Initialize DFTB calculator
-    dftb = run_init(ph, angular_momenta, basedir, phonopy_dir, working_dir, results_dir)
+    dftb = run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir)
 
     if args.command == 'bands':
         run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
@@ -178,44 +183,48 @@ def main(arguments=None):
         run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
 
 
-def run_init(ph, angular_momenta, basedir, phonopy_dir, working_dir, results_dir):
+def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir):
     '''
         Initialize DFTB calculator and run reference calculations
     '''
     print('-- working in %s' % (basedir + working_dir))
     os.chdir(basedir + working_dir)
 
-    dftb = DftbSuperCellCalc(angular_momenta)
+    if dftb_cmd is None:
+        dftb = DftbSuperCellCalc(angular_momenta)
+    else:
+        dftb = DftbSuperCellCalc(angular_momenta, cmd=dftb_cmd)
+        
     dftb.load_phonopy(ph)
 
     # Store Hamiltonian and overlap matrices
     if os.path.isfile('reference.npz'):
-        print('-- loading reference calculation')
+        print(' - loading reference calculation')
         npzfile = np.load('reference.npz')
         dftb.H0 = npzfile['H0']
         dftb.S0 = npzfile['S0']
     else:
-        print('-- starting reference calculation ...')
+        print(' - starting reference calculation ...')
         start = timer()
         dftb.calculate_reference()
         end = timer()
-        print('-- finished (%4.1f s).' % (end-start))
+        print(' - finished (%4.1f s).' % (end-start))
 
         np.savez('reference.npz', H0=dftb.H0, S0=dftb.S0)
 
     # Run preparation calculations for electron-phonon couplings
     # and store gradients
     if os.path.isfile('derivatives.npz'):
-        print('-- loading derivatives calculation')
+        print(' - loading derivatives calculation')
         npzfile = np.load('derivatives.npz')
         dftb.H_derivs = npzfile['H_derivs']
         dftb.S_derivs = npzfile['S_derivs']
     else:
-        print('-- starting derivatives calculation ...')
+        print(' - starting derivatives calculation ...')
         start = timer()
         dftb.calculate_derivatives()
         end = timer()
-        print('-- finished (%4.1f s).' % (end-start))
+        print(' - finished (%4.1f s).' % (end-start))
 
         np.savez('derivatives.npz', H_derivs=dftb.H_derivs, S_derivs=dftb.S_derivs)
 
@@ -240,10 +249,11 @@ def run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     nbands = dftb.get_num_bands()
 
     # rund electronic band-structure calculation
+    print('-- starting electronic calculations on paths ...')
     bands = []
     vels = []
     for i in range(npaths):
-        print('-- processing path %s to %s' % (path[i][0], path[i][1]))
+        print(' - processing path %s to %s' % (path[i][0], path[i][1]))
         nkpoints = kpoints[i].shape[0]
         energies = np.zeros((nkpoints, nbands), float)
         velocities = np.zeros((nkpoints, nbands, 3), float)
@@ -294,7 +304,7 @@ def run_calc_ph_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, res
     ph.run_band_structure(qpoints, is_band_connection=False, path_connections=connections, with_eigenvectors=True)
     bs_dict = ph.get_band_structure_dict()
     end = timer()
-    print('-- finished (%4.1f s).' % (end-start))
+    print(' - finished (%4.1f s).' % (end-start))
 
     # reorder phonon modes
     ph_evs = bs_dict['eigenvectors']
@@ -332,6 +342,9 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
         # factor by which the q-points are scaled
         q_mesh_refinement = qp_dict['Mesh'].get('refinement', default_mesh['Mesh']['refinement'])
         q_mesh_shift = qp_dict['Mesh'].get('shift', default_mesh['Mesh']['shift'])
+    else:
+        print('ERROR: no q-point mesh specified in EPC section of the input file')
+        return
 
     k_mesh_shift = epc_dict.get('kvec0', [0., 0., 0.])
     kvec0 = np.array(k_mesh_shift) # reference k-point for electrons
@@ -347,7 +360,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
     ph.run_mesh(q_mesh, with_eigenvectors=False, is_mesh_symmetry=False, is_gamma_center=False)
     mesh = ph.get_mesh_dict()
     end = timer()
-    print('-- finished (%4.1f s).' % (end-start))
+    print(' - finished (%4.1f s).' % (end-start))
 
     mesh_qpoints= mesh['qpoints']
 
@@ -364,7 +377,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
     start = timer()
     eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel)
     end = timer()
-    print('-- finished (%4.1f s).' % (end-start))
+    print(' - finished (%4.1f s).' % (end-start))
 
     # convert q-points to cartesian coordinates
     primitive_cell = dftb.primitive.cell * BOHR__AA
@@ -385,7 +398,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
                 energies[iq,n] = eps_k[n]
                 velocities[iq,n,:] = vel_k[:,n]
         end = timer()
-        print('-- finished (%4.1f s).' % (end-start))
+        print(' - finished (%4.1f s).' % (end-start))
 
     # store coupling matrix
     nkp = 0
@@ -427,7 +440,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
         # read section for band-path for ephline
         path, path_labels, npoints = path_dict_to_paths(qp_dict['Path'])
     else:
-        print('-- no band-path specified in EPC section of the input file')
+        print('ERROR: no band-path specified in EPC section of the input file')
         return
 
     k_mesh_shift = epc_dict.get('kvec0', [0., 0., 0.])
@@ -449,7 +462,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
     ph.run_band_structure(qpoints, is_band_connection=False, path_connections=connections, with_eigenvectors=True)
     bs_dict = ph.get_band_structure_dict()
     end = timer()
-    print('-- finished (%4.1f s).' % (end-start))
+    print(' - finished (%4.1f s).' % (end-start))
 
     # reorder phonon modes
     ph_evs = bs_dict['eigenvectors']
@@ -457,10 +470,11 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
     qpoints= bs_dict['qpoints']
     frequencies, eigenvectors = reorder_modes(ph_oms, ph_evs)
 
+    print('-- starting el-ph calculation ...')
     bands = []
     g_kq = []
     for i in range(npaths):
-        print('-- processing path %s to %s' % (path[i][0], path[i][1]))
+        print(' - processing path %s to %s' % (path[i][0], path[i][1]))
         nqpoints = qpoints[i].shape[0]
 
         eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i])
@@ -473,10 +487,10 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
     qvecs = cart_vecs(qpoints, primitive_cell)  # in units of 2*np.pi/a0
 
     # generate output as json
-    ephl_dict = { 'numBands': bands[0].shape[1], 'energies': np.vstack(bands), 'energyUnit': 'eV',
+    ephl_dict = {'numBands': bands[0].shape[1], 'energies': np.vstack(bands), 'energyUnit': 'eV',
                 'numModes': frequencies[0].shape[1], 'frequencies': np.vstack(frequencies)*THZ__EV, 'frequencyUnit': 'eV',
-                 'eigenvectors_real': np.real(np.vstack(eigenvectors)),
-                 'eigenvectors_imaginary': np.imag(np.vstack(eigenvectors)),
+                'eigenvectors_real': np.real(np.vstack(eigenvectors)),
+                'eigenvectors_imaginary': np.imag(np.vstack(eigenvectors)),
                 'epcs': np.vstack(g_kq), 'epcUnit': 'eV',
                 'coordsType': 'lattice', 'highSymCoordinates': np.vstack(path), 'highSymLabels': np.array(path_labels).flatten(),
                 'highSymIndices': np.cumsum(np.array([[0, qps.shape[0]] for qps in qpoints]).flatten()),
