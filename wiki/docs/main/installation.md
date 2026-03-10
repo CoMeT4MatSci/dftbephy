@@ -2,12 +2,12 @@
 
 ## Prerequisites
 
-- NumPy and SciPy (`pip install numpy scipy`)
-- DFTB+ ( For detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
+- NumPy and SciPy (available via `pip` and `conda`)
+- DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
 - [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge phonopy`)
 - [HSD](https://github.com/dftbplus/hsd-python) for DFTBephy input (`hsd-python` is available via `conda`)
-- Cython for faster routines (`pip install Cython`)
-- Other packages might be necessary: mpi4py, openmpi, spglib, h5py (Available via `pip` and `conda`)
+- Cython for faster routines end extensions (available via `pip` and `conda`)
+- Other required runtime dependencies: mpi4py, openmpi, spglib, h5py (available via `pip` and `conda`)
 
 
 > **Recommended installation method:**<br>
@@ -47,12 +47,19 @@ If you prefer not to change global conda settings (or if `channel_priority stric
 
 ### Environment Setup for DFTBephy
 
-The required Phonopy version (`phonopy<2.41`) is not available as a conda build for newer Python versions. To avoid this, create a new conda environment using Python 3.10, then activate it.
+Create a new conda environment using a recent Python version and then activate it:
 
 ```
-conda create --name dftbephy "python=3.10"
+conda create --name dftbephy
 conda activate dftbephy
 ```
+
+> **Optional:**
+> In this tutorial we use `python=3.14`. You can pin the Python version for the environment as:
+> ```bash
+> conda create -n dftbephy "python=3.14"
+> ```
+
 
 Optionally, you can install DFTB+ inside this conda environment. If DFTB+ is already available on the machine, you can skip this step.
 
@@ -64,16 +71,11 @@ mamba install  dftbplus-tools dftbplus-python
 When `dftbephy` environment is still active, install the prerequisites for DFTBephy:
 
 ```
-mamba install numpy scipy cython spglib openmpi mpi4py h5py setuptools hsd-python "phonopy<2.41"
+mamba install numpy scipy cython "spglib<2.7" openmpi mpi4py h5py setuptools hsd-python "phonopy<=2.48"
 ```
 
-Unfortunately, not all versions of phonopy are compatible with the current version of DFTBephy. The latest phonopy version that is still compatible is **Phonopy Version 2.40.0**.
+Unfortunately, not all versions of phonopy and spglib are compatible with the current version of DFTBephy. Please install **spglib<2.7** and **phonopy<=2.48.0**.
 
-
-> **Note:** Phonopy version 2.40.0 works with deprecation warnings:<br>
-In the latest phonopy versions, some of the classes have been updated (see the phonopy changelog [here](https://phonopy.github.io/phonopy/changelog.html#)).
-Some of our older scripts still use the legacy `get_*` calls and may require minor edits in order to run without warnings or errors.
-Updating these calls is a part of the ongoing work in progress in our code base.
 
 After downloading DFTBephy code from [GitHub](https://github.com/CoMeT4MatSci/dftbephy), you can run the following commands while the `dftbephy` conda environment is active.
 ```
