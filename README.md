@@ -16,20 +16,19 @@ The BibTeX entries are available in [`references.bib`](https://github.com/CoMeT4
 
 ## DFTBephy Wiki 
 
-Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provides guidance on installing and running DFTBephy, reproducing the Graphene example, and following the workflow from band structures to electron–phonon coupling, scattering rates, and transport properties. It also includes detailed documentation of the input files.
+Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provides guidance on installing and running DFTBephy, reproducing the Graphene example, and following the workflow from band structures to electron–phonon coupling, scattering rates, and transport properties. It also includes detailed documentation of the input file.
 
 # Prerequisites
 
-- numpy and scipy
 - [dftb+](https://github.com/dftbplus/dftbplus)
 - [phonopy](https://github.com/phonopy/phonopy) (`conda install -c conda-forge phonopy`)
 - cython (`pip install Cython`) for faster routines.
-- Other packages might be necessary: mpi4py, openmpi, spglib, h5py, [hsd](https://github.com/dftbplus/hsd-python) 
+- Other packages might be necessary: numpy, scipy, mpi4py, openmpi, spglib, h5py, [hsd](https://github.com/dftbplus/hsd-python) 
 
 # Installation
 
 - Pull / download latest version from github.
-- Run `python setup.py build_ext --inplace` in the terminal to build faster routines.
+- Run `python setup.py build_ext --inplace` in the terminal to build faster routines using Cython.
 - Run `pip install -e .` in the terminal to install package but keep it editable in the current directory.
 
 # Running calculations
@@ -40,9 +39,11 @@ Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provide
 - Detailed information about DFTBephy input (dftbephy_in.hsd) can be found [here][dftbephyinput] and on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
 
 # What you can get
-The main purpose of DFTBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the electron scattering rate (at the moment only within SERTA). The [scripts/](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts) directory contains some programs and templates for computing
-- EPCs at k-point on a (fine) q-mesh -- [dftbephy-epc.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-epc.py) -- the result is stored in a hdf5 file;
-- EPCs along a given q-path  -- [dftbephy-ephline.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-ephline.py) -- the results are stored in a json file;
+The main purpose of DFTBephy is the calculation of electron-phonon couplings (EPCs). Apart from that, the package also allows the calculation of the electronic band-structure, the electron scattering rates, and the electronic conductivity (both at the moment only within SERTA).
+Specifically, DFTBephy allows to compute
+- Electronic bands and phonon dispersions along a path -- `dftbephy bands` -- the results are stored in json files;
+- EPCs at k-point on a (fine) q-mesh -- `dftbephy epc` -- the result is stored in a hdf5 file;
+- EPCs along a given q-path  -- `dftbephy ephline` -- the results are stored in a json file;
 - Relaxation times on a (fine) k-mesh -- [dftbephy-relaxationtimes-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-relaxationtimes-mpi.py) -- the results are stored in a hdf5 file;
 - Conductivity tensor -- [dftbephy-mobility-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mobility-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
 
