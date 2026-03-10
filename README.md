@@ -36,7 +36,7 @@ Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provide
 - Starting point for all DFTBephy calculations is a finished phonopy calculation of the force constants (e.g. FORCE_SETS and phonopy_disp.yaml).
 - The working directory should contain a dftb_in.hsd file, which reads the geometry from geo.gen (will be written by DFTBephy) and contains the option `WriteHS = Yes` (to be used by DFTBephy). The directory may also contain charges.bin from a previous SCC run.
 - See the examples/ directory for more details. (It's recommended to copy one of the examples and adapt it to your needs.)
-- Detailed information about DFTBephy input (dftbephy_in.hsd) can be found [here][dftbephyinput] and on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
+- Detailed information about DFTBephy input (dftbephy_in.hsd) can be found on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
 
 # What you can get
 The main purpose of DFTBephy is the calculation of electron-phonon couplings (EPCs). Apart from that, the package also allows the calculation of the electronic band-structure, the electron scattering rates, and the electronic conductivity (both at the moment only within SERTA).
@@ -50,5 +50,3 @@ Specifically, DFTBephy allows to compute
 See jupyter notebooks in [notebooks/](https://github.com/CoMeT4MatSci/dftbephy/tree/master/notebooks) for how to read, use and visualize the output.
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job.- http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-
-[dftbephyinput]: <https://github.com/CoMeT4MatSci/dftbephy/blob/master/Input_for_DFTBephy.md>
