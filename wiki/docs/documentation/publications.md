@@ -1,5 +1,10 @@
 # Publications using DFTBephy
 
+><span style="color: gray;">[2D, Biphenylene]</span><br>
+>Katkov, V. L., Osipov, V. A. Anisotropy of the Electron Mobility of Two-Dimensional Biphenylene Structures. JETP Letters, 123, 106–112 (2026).
+>DOI:10.1134/S0021364025609716
+> [full-text access](https://link.springer.com/article/10.1134/S0021364025609716#article-info)
+
 ><span style="color: gray;">[1D, CNTs]</span><br>
 >Katkov, V. L., Osipov, V. A. Phonon-limited mobility in H/F-functionalized nanotubes with 1D π-chains. Journal of Applied Physics, 138, 214301 (2025).
 >DOI:10.1063/5.0302462
