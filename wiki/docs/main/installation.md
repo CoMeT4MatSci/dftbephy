@@ -4,10 +4,10 @@
 
 - NumPy and SciPy (available via `pip` and `conda`)
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
-- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge phonopy`)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy<=2.48" `)
 - [HSD](https://github.com/dftbplus/hsd-python) for DFTBephy input (`hsd-python` is available via `conda`)
 - Cython for faster routines end extensions (available via `pip` and `conda`)
-- Other required runtime dependencies: mpi4py, openmpi, spglib, h5py (available via `pip` and `conda`)
+- Other required runtime dependencies: `mpi4py`, `openmpi`, `spglib<2.7` , `h5py` (available via `pip` and `conda`)
 
 
 > **Recommended installation method:**<br>
