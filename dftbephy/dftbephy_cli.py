@@ -92,7 +92,8 @@ def cart_vecs(points, cell):
 commands = [('init',  'Prepare calculations.'),
             ('bands', 'Calculate electronic band-structure and phonon dispersions along a path.'),
             ('epc',   'Calculate electron-phonon coupling matrix on a mesh.'),
-            ('ephline', 'Calculate electron-phonon coupling matrix along a path.')]
+            ('ephline', 'Calculate electron-phonon coupling matrix along a qp path.'),
+            ('rtline', 'Calculate electronic relaxation-times along a kp path.')]
             
 #            ('relaxationtimes', 'Calculate relaxation times.'),
 #            ('mobility'), 'Calculate transport properties.']
@@ -181,6 +182,9 @@ def main(arguments=None):
 
     elif args.command == 'ephline':
         run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
+
+    elif args.command == 'rtline':
+        run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
 
 
 def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir):
@@ -477,7 +481,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
         print(' - processing path %s to %s' % (path[i][0], path[i][1]))
         nqpoints = qpoints[i].shape[0]
 
-        eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i])
+        eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i], band_sel=band_sel)
 
         bands.append(epskq)
         g_kq.append(np.sqrt(g2))
@@ -500,6 +504,140 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
 
     with open('ephline.json', 'w') as outfile:
         json.dump(json.dumps(ephl_dict, default=convert), outfile)
+
+
+def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir):
+    import json
+    from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections
+    from dftbephy.analysis import inv_tau_nk_lam
+
+    # read section for relaxation time calculations
+    rt_dict = check_hsd_input(inp_dict, 'RelaxationTimes')
+
+    if 'SERTA'in rt_dict.keys():
+        rta_method = 'SERTA'
+        rt_dict = rt_dict['SERTA']
+    else:
+        print('ERROR: unsupported method for RelaxationTimes.')
+        return
+
+    default_mesh = {'Mesh': {'npoints': [1, 1, 1], 'refinement': 1, 'shift': [0.0,0.0,0.0]}}
+    qp_dict = rt_dict.get('qpoints', default_mesh)
+    if 'Mesh' in qp_dict.keys():
+        # size of q-point mesh (eg. nq x nq x 1)
+        q_mesh = qp_dict['Mesh'].get('npoints', default_mesh['Mesh']['npoints'])
+        # factor by which the q-points are scaled
+        q_mesh_refinement = qp_dict['Mesh'].get('refinement', default_mesh['Mesh']['refinement'])
+        q_mesh_shift = qp_dict['Mesh'].get('shift', default_mesh['Mesh']['shift'])
+
+    kp_dict = rt_dict.get('kpoints', default_mesh)
+    if 'Path' in kp_dict.keys():
+        # read section for band-path for ephline
+        path, path_labels, npoints = path_dict_to_paths(qp_dict['Path'])
+    else:
+        print('ERROR: no band-path specified in RelaxationTimes section of the input file')
+        return
+
+    k_mesh_shift = rt_dict.get('kvec0', [0., 0., 0.])
+    kvec0 = np.array(k_mesh_shift) # reference k-point for electrons
+
+    # selection of a subset of bands
+    band_sel = rt_dict.get('bands', None)
+    if type(band_sel) is list:
+        band_sel[1] = band_sel[1]+1
+
+    # chemical potential(s)
+    if type(rt_dict['mu']) is dict:
+        m = rt_dict['mu']['Range']
+        mu_list = np.linspace(float(m[0]), float(m[1]), int(m[2]))
+    elif type(rt_dict['mu']) is list:
+        mu_list = rt_dict['mu']
+    elif type(rt_dict['mu']) is float:
+        mu_list = [rt_dict['mu']]
+    else:
+        print('ERROR: unkown type for mu (neither Range, list or float).')
+        return
+
+    kBT0 = rt_dict.get('temperature', 0.0259)
+    assert(type(kBT0) is float)
+
+    sigma0 = rt_dict.get('sigma', 0.003)
+    assert(type(sigma0) is float)
+
+    EF = rt_dict.get('Efermi', 0.00)
+    assert(type(EF) is float)
+
+
+    print('-- starting phonon calculations on mesh ...')
+    start = timer()
+    ph.run_mesh(q_mesh, with_eigenvectors=False, is_mesh_symmetry=False, is_gamma_center=False)
+    mesh = ph.get_mesh_dict()
+    end = timer()
+    print(' - finished (%4.1f s).' % (end-start))
+
+    # we are only interested in a small region around kvec0
+    qps = mesh['qpoints']/q_mesh_refinement
+    ph.run_qpoints(qps, with_eigenvectors=True)
+
+    mesh = ph.get_qpoints_dict()
+    mesh_qpoints = qps
+    mesh_frequencies = mesh['frequencies'] 
+    mesh_eigenvectors = mesh['eigenvectors']
+
+    print('-- starting el-ph calculation ...')
+    start = timer()
+    eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel)
+    end = timer()
+    print(' - finished (%4.1f s).' % (end-start))
+
+
+    # get k-points along paths
+    kpoints, connections = get_band_qpoints_and_path_connections(path, npoints=npoints)
+    npaths = len(kpoints)   # number of paths
+    nbands = mesh_g2.shape[2]
+
+    print('-- starting relaxation-times calculation ...')
+    bands = []
+    linewidths = []
+    for i in range(npaths):
+        print(' - processing path %s to %s' % (path[i][0], path[i][1]))
+        nkpoints = kpoints[i].shape[0]
+        energies = np.zeros((nkpoints, nbands), float)
+        taus = np.zeros((nkpoints, nbands), float)
+
+        printProgressBar(0, nkpoints, prefix='k-point', suffix='complete')
+        for ik, kvec in enumerate(kpoints[i]):
+            eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel)
+        
+            for n in range(nbands):
+                energies[ik,n] = eps_k[n]
+                taus[ik,n] = inv_tau_nk_lam( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
+
+            printProgressBar(ik+1, nkpoints, prefix='k-point', suffix='complete')
+
+        bands.append(energies)
+        linewidths.append(taus)
+
+    # convert q-points to cartesian coordinates
+    primitive_cell = dftb.primitive.cell * BOHR__AA
+    kvecs = cart_vecs(kpoints, primitive_cell)  # in units of 2*np.pi/a0
+
+    # generate output as json
+    bs_dict = { 'particleType': 'electron', 'numBands': bands[0].shape[1], 'energies': np.vstack(bands), 'energyUnit': 'eV', 
+      'coordsType': 'lattice', 'highSymCoordinates': np.vstack(path), 'highSymLabels': np.array(path_labels).flatten(), 
+      'highSymIndices': np.cumsum(np.array([[0, kps.shape[0]] for kps in kpoints]).flatten()),
+      'wavevectorCoordinates': np.vstack(kpoints), 'wavevectorIndices': list(range(np.vstack(kpoints).shape[0]))}
+
+    with open('path_el_bandstructure.json', 'w') as outfile:
+        json.dump(json.dumps(bs_dict, default=convert), outfile)
+
+    # generate output as json
+    lw_dict = { 'chemicalPotentialUnit': 'eV', 'chemicalPotentials': [mu,], 'particleType': 'electron', 'numBands': bands[0].shape[1], 
+      'energies': np.vstack(bands), 'energyUnit': 'eV', 
+      'coordsType': 'lattice', 'linewidths': np.vstack(linewidths), 'linewidthsUnit': 'eV', 'temperatureUnit': 'eV', 'temperatures': [kBT,]}
+
+    with open('path_el_relaxation_times.json', 'w') as outfile:
+        json.dump(json.dumps(lw_dict, default=convert), outfile)
 
 
 if __name__ == '__main__':
