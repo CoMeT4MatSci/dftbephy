@@ -44,6 +44,7 @@ Specifically, DFTBephy allows to compute
 - Electronic bands and phonon dispersions along a path -- `dftbephy bands` -- the results are stored in json files;
 - EPCs at k-point on a (fine) q-mesh -- `dftbephy epc` -- the result is stored in a hdf5 file;
 - EPCs along a given q-path  -- `dftbephy ephline` -- the results are stored in a json file;
+- Relaxation times along a given q-path  -- `dftbephy rtline` -- the results are stored in a json file;
 - Relaxation times on a (fine) k-mesh -- [dftbephy-relaxationtimes-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-relaxationtimes-mpi.py) -- the results are stored in a hdf5 file;
 - Conductivity tensor -- [dftbephy-mobility-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mobility-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
 
