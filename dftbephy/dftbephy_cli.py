@@ -509,7 +509,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
 def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir):
     import json
     from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections
-    from dftbephy.analysis import inv_tau_nk_lam
+    from dftbephy.analysis import inv_tau_nk
 
     # read section for relaxation time calculations
     rt_dict = check_hsd_input(inp_dict, 'RelaxationTimes')
@@ -533,7 +533,7 @@ def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resul
     kp_dict = rt_dict.get('kpoints', default_mesh)
     if 'Path' in kp_dict.keys():
         # read section for band-path for ephline
-        path, path_labels, npoints = path_dict_to_paths(qp_dict['Path'])
+        path, path_labels, npoints = path_dict_to_paths(kp_dict['Path'])
     else:
         print('ERROR: no band-path specified in RelaxationTimes section of the input file')
         return
@@ -566,7 +566,12 @@ def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resul
 
     EF = rt_dict.get('Efermi', 0.00)
     assert(type(EF) is float)
+    
+    # TODO: support list of chemical potentials
+    mu = EF + mu_list[0]
 
+    print('-- Relaxation-time calculation along k-path')
+    print(' - using mu=%7.3f eV, k_BT=%7.3f eV, E_F=%7.3f eV' % (mu, kBT0, EF))
 
     print('-- starting phonon calculations on mesh ...')
     start = timer()
@@ -611,7 +616,7 @@ def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resul
         
             for n in range(nbands):
                 energies[ik,n] = eps_k[n]
-                taus[ik,n] = inv_tau_nk_lam( n, eps_k[n], mu, kBT, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma_0)[0]/q_mesh_refinement**2
+                taus[ik,n] = inv_tau_nk( n, eps_k[n], mu, kBT0, mesh_g2, mesh_epskq, mesh_frequencies*THZ__EV, sigma=sigma0)[0]/q_mesh_refinement**2
 
             printProgressBar(ik+1, nkpoints, prefix='k-point', suffix='complete')
 
@@ -634,7 +639,7 @@ def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resul
     # generate output as json
     lw_dict = { 'chemicalPotentialUnit': 'eV', 'chemicalPotentials': [mu,], 'particleType': 'electron', 'numBands': bands[0].shape[1], 
       'energies': np.vstack(bands), 'energyUnit': 'eV', 
-      'coordsType': 'lattice', 'linewidths': np.vstack(linewidths), 'linewidthsUnit': 'eV', 'temperatureUnit': 'eV', 'temperatures': [kBT,]}
+      'coordsType': 'lattice', 'linewidths': np.vstack(linewidths), 'linewidthsUnit': 'eV', 'temperatureUnit': 'eV', 'temperatures': [kBT0,]}
 
     with open('path_el_relaxation_times.json', 'w') as outfile:
         json.dump(json.dumps(lw_dict, default=convert), outfile)
