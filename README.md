@@ -45,8 +45,8 @@ Specifically, DFTBephy allows to compute
 - EPCs at k-point on a (fine) q-mesh -- `dftbephy epc` -- the result is stored in a hdf5 file;
 - EPCs along a given q-path  -- `dftbephy ephline` -- the results are stored in a json file;
 - Relaxation times along a given q-path  -- `dftbephy rtline` -- the results are stored in a json file;
-- Relaxation times on a (fine) k-mesh -- [dftbephy-relaxationtimes-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-relaxationtimes-mpi.py) -- the results are stored in a hdf5 file;
-- Conductivity tensor -- [dftbephy-mobility-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mobility-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
+- Relaxation times on a (fine) k-mesh -- [dftbephy-mpi.py relaxationtimes](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mpi.py) -- the results are stored in a hdf5 file;
+- Conductivity tensor -- [dftbephy-mpi.py mobility](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
 
 See jupyter notebooks in [notebooks/](https://github.com/CoMeT4MatSci/dftbephy/tree/master/notebooks) for how to read, use and visualize the output.
 
