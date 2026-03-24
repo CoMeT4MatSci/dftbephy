@@ -19,4 +19,5 @@ chapters:
       - file: documentation/inputfile
       - file: documentation/sourcecode
       - file: documentation/publications
+      - file: documentation/changelog
 
