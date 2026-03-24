@@ -17,7 +17,7 @@ All parameters are defined under a single section *DFTBephy={}*. This section mu
 
 **name** Specifies the name of the system.
 
-**angularmomenta** Specifies the maximum angular momentum for each type of atom in the system.
+**DFTB** Parameters for DFTB+ are specified in this block.
 
 **Phonopy** This is an optional block to define settings related to the phonopy calculation. It is not required if the default phonopy parameters are used. Specify this block only when you rename the `yaml` file or change the symmetry tolerance `symprec`.
 
@@ -41,8 +41,10 @@ DFTBephy {
 
     name = graphene
 
-    angularmomenta = {
-        C = {s p}
+    DFTB = {
+        angularmomenta = {
+            C = {s p}
+        }
     }
 
    Phonopy = {
@@ -58,6 +60,13 @@ DFTBephy {
 ```
 
 Detailed information about the parameters to be defined in *Bands {}*, *EPCs {}*, *RelaxationTimes {}* and *Conductivities {}* blocks are given in the following subsections.
+
+### DFTB {}
+
+| Name    | Definition                                                                 | Default |
+|-------- | -------------------------------------------------------------------------- | ------- |
+| angularmomenta | Specifies the maximum angular momentum for each type of atom in the system. |         |
+
 
 ### Bands {}
 
@@ -92,7 +101,7 @@ This section includes the parameters for electron-phonon coupling calculations:
 
 | Name | Definition  | Default |
 | ------ | ------ | ------ |
-| qpoints | *q*-point mesh for Brillouin-zone integration|   |
+| qpoints | *q*-point mesh or path for Brillouin-zone integration|   |
 | npoints | size of *q*-point mesh | [1, 1, 1]  |
 | refinement | factor by which the *q*-points are scaled (optional) | 1 |
 | kvec0 | reference *k*-point for the electronic states | [0., 0., 0.] |
@@ -101,43 +110,50 @@ This section includes the parameters for electron-phonon coupling calculations:
 
 The ```bands``` option only controls which bands are saved in the output. The calculations are always performed including all bands. It can be defined in `EPCs {}`, `RelaxationTimes {}` and `Conductivities {}` blocks.
 
-For EPC calculations along a path (ephline), the ```path```, ```labels```, and ```npoints``` parameters are defined in the same way as in the ```Bands{}``` block.
-
-*Example for EPCs block:*
+*Example of EPCs block for calculations on a mesh (`dftbephy epc`):*
 ```
     EPCs {
-        kvec0 = 0.32283333 0.64566667 0.0
+        kvec0 = -0.64566667 -0.32283333 0.0
 
-        ##### only for EPC calc. on mesh ######
         qpoints = Mesh {
             npoints = 200 200 1
-            refinement = 1
+            refinement = 10
         }
-        bands = 3 4
-        velocities = yes
-
-
-        ########################################
-        #### only for EPC calc. along path ####
-        path = {
-             0.0       0.0       0.0
-             0.0       0.5       0.0
-             0.333333  0.666667  0.0
-             0.0       0.0       0.0
-        }
-        labels = { G M K G }
-        npoints = 51
-        ########################################
+#        bands = 3 4
+        velocities = no
     }
 ```
+
+For EPC calculations along a path, ```qpoints``` has to be defined as a path and, ```labels```, and ```npoints``` are defined in the same way as in the ```Bands{}``` block.
+
+*Example of EPCs block for calculations along a path (`dftbephy ephline`):*
+
+```
+    EPCs {
+        kvec0 = -0.64566667 -0.32283333 0.0
+
+        qpoints = Path {
+            path = {
+                 0.0        0.0       0.0
+                -0.5       -0.5       0.0
+                -0.666667  -0.333333  0.0
+                 0.0        0.0       0.0
+            }
+            labels = { G M K G }
+            npoints = 51
+        }
+    }
+```
+
 
 ### RelaxationTimes = {}
 Relaxation times are calculated within self-energy relaxation time approximation (SERTA). Additional properties for relaxation time calculations are as follows:
 
 | Name | Definition  | Default |
 | ------ | ------ | ------ |
-| kpoints | *k*-point mesh for Brillouin-zone integration|   |
-| npoints | size of *k*-point mesh | [1, 1, 1]  |
+| qpoints | *q*-point mesh for Brillouin-zone integration (for phonons)|   |
+| kpoints | *k*-point mesh or path for Brillouin-zone integration (for carriers)|   |
+| npoints | size of the mesh | [1, 1, 1]  |
 | refinement | factor by which the *k*-points are scaled | 1 |
 | shift | shift for reference *k*-point for the electronic states | [0., 0., 0.]
 | Efermi [eV] | Fermi energy in eV | 0.0 |
@@ -171,6 +187,31 @@ Relaxation times are calculated within self-energy relaxation time approximation
 
 Chemical potential `mu` can be specified either as a range, `Range { min max number_of_values }`, or as an explicit list, `{ value1 value2 value3 }`.
 
+*Example for calculations along a k-path (`dftbephy rtline`):*
+```
+RelaxationTimes = SERTA {
+        qpoints = Mesh {
+            npoints = 100 100 1
+            refinement = 1
+        }
+
+        kpoints = Path {
+            path = {
+                0.0     0.0     0.0
+                0.0     0.5     0.0
+                0.333333 0.666666 0.0
+                0.0     0.0     0.0
+            }
+            labels = {G M K G}
+            npoints = 51
+        }
+
+        Efermi [eV] = -4.659554449029772
+        mu [eV] = { 0.1 }
+        sigma [eV] = 0.003
+        temperature [eV] = 0.0259
+   }
+```
 
 ### Conductivities = {}
 One of the ```CRTA``` or ```SERTA``` methods must be selected. The parameters in the `Relaxationtimes` block are defined in the same way here.
