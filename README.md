@@ -20,16 +20,22 @@ Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provide
 
 # Prerequisites
 
-- [dftb+](https://github.com/dftbplus/dftbplus)
-- [phonopy](https://github.com/phonopy/phonopy) (`conda install -c conda-forge phonopy`)
-- cython (`pip install Cython`) for faster routines.
-- Other packages might be necessary: numpy, scipy, mpi4py, openmpi, spglib, h5py, [hsd](https://github.com/dftbplus/hsd-python) 
+_Before and during the DFTBephy workflow:_
+- DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0"" `)
+
+_Before install/build DFTBephy:_
+- Build-system dependencies: `numpy`, `Cython`, `setuptools`
+- Other required runtime dependencies: `scipy`, `spglib<2.7` , `h5py`, `hsd` 
+- (Optional) Dependencies for MPI version: `mpi4py`, `openmpi`
 
 # Installation
 
 - Pull / download latest version from github.
+- Install build-system dependencies (`pip install numpy cython setuptools`). 
 - Run `python setup.py build_ext --inplace` in the terminal to build faster routines using Cython.
-- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory.
+- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory (Serial Version, No-MPI).
+- (Optional) Run `python -m pip install -e ".[openmpi]"` to install the MPI version.
 
 # Running calculations
 
