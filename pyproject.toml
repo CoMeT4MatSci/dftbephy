@@ -13,8 +13,12 @@ dependencies = [
     "scipy",
     "phonopy>=3.0.0",
     "spglib<2.7",
-    "h5py"
+    "h5py",
+    "hsd"
 ]
+
+[project.optional-dependencies]
+openmpi = ["mpi4py", "openmpi"]
 
 [project.scripts]
 dftbephy = "dftbephy.dftbephy_cli:main"
