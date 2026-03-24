@@ -19,7 +19,7 @@ At present, only the self-energy relaxation-time approximation (SERTA) is implem
 
 On GitHub, all input files for graphene are provided in the [/examples/Graphene](https://github.com/CoMeT4MatSci/dftbephy/tree/master/examples/Graphene) directory. It's recommended that you copy and adapt one of the examples to suit your requirements.
 
-Including the DFTBephy input file and the corresponding Python scripts, `/examples/Graphene` can be used directly as workspace. The directory structure is shown schematically below.
+Including the DFTBephy input file, `/examples/Graphene` can be used directly as workspace. The directory structure is shown schematically below.
 
 
 ```
@@ -32,7 +32,6 @@ Including the DFTBephy input file and the corresponding Python scripts, `/exampl
 │   ├── dftb_in.hsd
 │   └── geo.gen           # optimized unit-cell geometry
 ├── dftbephy_in.hsd       # DFTBephy input file
-└── dftbephy-*.py         # Python driver scripts
 ```
 
 The important parameters to be added to `dftb_in.hsd` in `el-ph/` directory:
@@ -83,7 +82,9 @@ DFTBephy {
   working_dir  =                     # relative to base_dir
   name         =
 
-  angularmomenta = { }               # angular momentum for each element
+  DFTB = {
+      angularmomenta = {   }         # angular momentum for each element
+   }
 
   Bands { }                          # band settings
   EPCs { }                           # electron-phonon coupling settings
@@ -94,25 +95,16 @@ DFTBephy {
 
 One can find the detailed info about the input file `dftbephy_in.hsd` in {ref}`inputfile-section` section.
 
-## Scripts
+## Command line
 
-We provide scripts for the calculations in [/scripts][dftbephy-scripts] directory.
-The Python scripts named `dftbephy-*.py` can be used with the DFTBephy input (`dftbephy_in.hsd`) which allows the certain parameters to be easily modified. Detailed information about `dftbephy_in.hsd` can be found {ref}`inputfile-section` section.
+DFTBephy (versions > v1.0) provides a command-line interface for calculations. The commands use the DFTBephy input file (`dftbephy_in.hsd`), while the type of calculation is selected by the corresponding subcommand.
 
+The following subcommands are available:
 
-If a conda environment has been created, it should first be activated before running the Python script. For example:
-```
-conda activate dftbephy
-python dftbephy-bands.py
-```
-
-The parallel scripts (`dftbephy-*-mpi.py`) distribute the workload over k-points and can be run with MPI, e.g.:
-
-```
-mpirun -np 16 python dftbephy-relaxationtimes-mpi.py |& tee -a run-scatterings.log
-```
-
-Depending on your system, it can be useful to set the thread limits (e.g. `OMP_NUM_THREADS`, `MKL_NUM_THREADS`, etc.) in the `dftbephy-*-mpi.py` scripts so that the total concurrency (ranks × threads per rank) matches the available CPU cores and avoids oversubscription.
+- `dftbephy bands` for electronic bands and phonon dispersions along a path.
+- `dftbephy epc` for EPCs at a k-point on a (fine) q-mesh.
+- `dftbephy ephline` for EPCs along a given q-path.
+- `dftbephy rtline` for relaxation times along a given q-path.
 
 
 ## Post-processing
@@ -125,7 +117,6 @@ We also provide Jupyter Notebooks in [/notebooks][dftbephy-notebooks] directory 
    [phonopyDFTB+]: <http://phonopy.github.io/phonopy/dftb%2B.html#dftbp-interface>
 
    [dftbephy-examples]: <https://github.com/CoMeT4MatSci/dftbephy/tree/master/examples/Graphene>
-   [dftbephy-scripts]: <https://github.com/CoMeT4MatSci/dftbephy/tree/master/scripts>
    [dftbephy-notebooks]: <https://github.com/CoMeT4MatSci/dftbephy/tree/master/notebooks>
 
    [dftbephy-input]: documentation/inputfile
