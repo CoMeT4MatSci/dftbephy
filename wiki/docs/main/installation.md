@@ -2,13 +2,26 @@
 
 ## Prerequisites
 
-- NumPy and SciPy (available via `pip` and `conda`)
+Before and during the DFTBephy workflow:
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
-- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy<=2.48" `)
-- [HSD](https://github.com/dftbplus/hsd-python) for DFTBephy input (`hsd-python` is available via `conda`)
-- Cython for faster routines end extensions (available via `pip` and `conda`)
-- Other required runtime dependencies: `mpi4py`, `openmpi`, `spglib<2.7` , `h5py` (available via `pip` and `conda`)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0" `)
 
+Before install/build DFTBephy:
+- **Build-system dependencies**: `numpy`, `Cython`, `setuptools`
+- **Other required runtime dependencies**: `scipy`, `spglib<2.7` , `h5py`, `hsd`
+- (Optional) Dependencies for MPI version: `mpi4py`, `openmpi`
+
+Build-system dependencies are needed while building DFTBephy itself. Therefore, they must be installed prior to the installation step.
+
+Runtime dependencies are needed when running calculations or scripts after installation. These dependencies are specified in the `pyproject.toml` file and do not need to be installed manually by the user, as they are handled by the build system.
+_The main runtime dependencies are:_
+`scipy` — scientific computing routines
+`spglib<2.7` — symmetry analysis of crystal structures
+`h5py` — reading and writing HDF5 files
+`hsd` — parsing DFTBephy input files [HSD](https://github.com/dftbplus/hsd-python)
+`cython` — also required at runtime for faster routines end extensions
+
+All DFTBephy dependencies are available via both `pip` and `conda`. External tools, in particular DFTB+, may need to be installed separately depending on the workflow.
 
 > **Recommended installation method:**<br>
 While not strictly required, we recommend using a conda environment to keep dependencies isolated, avoid conflicts with system-wide packages, and make the setup reproducible. <br>
@@ -17,8 +30,10 @@ Using `conda` or `mamba` is often the smoothest way to install packages because 
 ## How to install DFTBephy
 
 - Pull / download latest version from [GitHub](https://github.com/CoMeT4MatSci/dftbephy).
-- Run `python setup.py build_ext --inplace` in the terminal to build faster routines.
-- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory.
+- Install build-system dependencies (`pip install numpy cython setuptools`).
+- Run `python setup.py build_ext --inplace` in the terminal to build faster routines using Cython.
+- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory (**Serial Version**).
+- (Optional) Run `python -m pip install -e ".[openmpi]"` to install the **MPI version**.
 
 ## Usage in a Conda environment
 
@@ -68,13 +83,12 @@ mamba install 'dftbplus=*=nompi_*'
 mamba install  dftbplus-tools dftbplus-python
 ```
 
-When `dftbephy` environment is still active, install the prerequisites for DFTBephy:
+When `dftbephy` environment is still active, install all the prerequisites for DFTBephy in a single step:
 
 ```
-mamba install numpy scipy cython "spglib<2.7" openmpi mpi4py h5py setuptools hsd-python "phonopy<=2.48"
+mamba install numpy cython setuptools "spglib<2.7" "phonopy>=3.0.0" scipy h5py hsd-python openmpi mpi4py
 ```
-
-Unfortunately, not all versions of phonopy and spglib are compatible with the current version of DFTBephy. Please install **spglib<2.7** and **phonopy<=2.48.0**.
+Unfortunately, not all versions of phonopy and spglib are compatible with the current version of DFTBephy. Please install **spglib<2.7** and **phonopy>=3.0.0**.
 
 
 After downloading DFTBephy code from [GitHub](https://github.com/CoMeT4MatSci/dftbephy), you can run the following commands while the `dftbephy` conda environment is active.
@@ -82,7 +96,7 @@ After downloading DFTBephy code from [GitHub](https://github.com/CoMeT4MatSci/df
 unzip dftbephy-master.zip
 cd dftbephy-master
 python setup.py build_ext --inplace
-pip install -e .
+pip install -e . --no-deps
 ```
-
+Since all dependencies have already been installed via conda/mamba, here, we installed DFTBephy without re-installing dependencies (`--no-deps`).
 
