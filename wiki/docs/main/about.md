@@ -7,7 +7,7 @@ DFTBephy is a computational framework based on the density functional tight bind
 The main purpose of DFTBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the charge carrier scattering rates (at the moment only within SERTA).
 
 
-The [scripts/](https://github.com/CoMeT4MatSci/dftbephy/tree/master/scripts) directory contains some python scripts for computing:
+DFTBephy provides:
 - EPCs at k-point on a (fine) q-mesh and along a given q-path
 - Scattering rates on a (fine) k-mesh and along a given k-path
 - Conductivity tensor
