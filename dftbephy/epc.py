@@ -182,9 +182,9 @@ def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigen
                 eps(kvec + q) = electronic band-energies at kvec + qvec (shape: (nqpoints, nbands))
                 mesh_g2 = absolute square of g_{mn}^lambda(kvec0, q) (shape: (nqpoints, nmodes, nbands, nbands))
     """
-    print('-- INFO: using scc EPC calculation v2 --')
+    print('** INFO: using scc EPC calculation v2 **')
     
-    orbitals = [sum([std_orbital_order[am] for am in angular_momenta[cs]], []) for cs in supercell.get_chemical_symbols()]
+    orbitals = [sum([std_orbital_order[am] for am in angular_momenta[cs]], []) for cs in supercell.symbols]
     norbitals = [len(o) for o in orbitals]
     sc2idx = np.insert(np.cumsum(norbitals), 0, 0) # map of atom in supercell to first orbital in hamiltonian/overlap
 
@@ -193,8 +193,8 @@ def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigen
     uc2idx = np.insert(np.cumsum(norbitals), 0, 0) # map of atom in unitcell to first orbital in hamiltonian/overlap
 
     uc_pos = primitive.scaled_positions - primitive.scaled_positions[0]
-    svecs, multi = get_smallest_vectors(supercell.get_cell(), supercell.scaled_positions, supercell.scaled_positions[uc2sc] )
-    trans_mat_float = np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell()))
+    svecs, multi = get_smallest_vectors(supercell.cell, supercell.scaled_positions, supercell.scaled_positions[uc2sc] )
+    trans_mat_float = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
     trans_mat = np.rint(trans_mat_float).astype(int)
     assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
     svecs = np.array(np.dot(svecs, trans_mat), dtype="double", order="C")
@@ -208,8 +208,8 @@ def calculate_scc_g2(kvec0, band_sel, mesh_qpoints, mesh_frequencies, mesh_eigen
     # dHdR_k = calculate_lattice_ft_derivative(ham_derivs, kvec0, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
     dSdR_k = calculate_lattice_ft_derivative(ovr_derivs, kvec0, uc2sc, sc2uc, sc2c, uc2idx, sc2idx, svecs, multi)
 
-    uc_masses = supercell.get_masses()[uc2sc] # masses in primitive cell
-    Nsc = supercell.get_supercell_matrix().diagonal().prod() # number of primitive cells in super cell
+    uc_masses = supercell.masses[uc2sc] # masses in primitive cell
+    Nsc = supercell.supercell_matrix.diagonal().prod() # number of primitive cells in super cell
 
     nqpoints = mesh_frequencies.shape[0] # no of qpoints
     nmodes = mesh_frequencies.shape[1] # no of phonon branches

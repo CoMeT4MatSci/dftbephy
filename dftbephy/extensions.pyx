@@ -114,7 +114,7 @@ def calculate_lattice_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def calculate_lattice_double_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, double[:] kvec2, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, int[:,:] multi):
+def calculate_lattice_double_ft_derivative(double[:,:,:,:] ham_derivs, double[:] kvec, double[:] kvec2, long[:] uc2sc, long[:] sc2uc, long[:] sc2c, long[:] uc2idx, long[:] sc2idx, double[:,:,:,:] svecs, long[:,:] multi):
     """Calculate double Fourier transform of supercell hamiltonian/overlap matrix derivative ham_derivs at k-points kvec and kvec2.        
        
        returns: complex matrix dH/dR(s'', dir, kvec, kvec2)
@@ -128,7 +128,7 @@ def calculate_lattice_double_ft_derivative(double[:,:,:,:] ham_derivs, double[:]
     cdef double complex[:,:,:,:] dHdR_view = dHdR
 
     cdef Py_ssize_t ni, m, i, j, s, l, l0, sp, lp, ns, nsp, alpha
-    cdef int mul, mul2
+    cdef long mul, mul2
     cdef double complex phase, phase2
     cdef double dot_vk
 

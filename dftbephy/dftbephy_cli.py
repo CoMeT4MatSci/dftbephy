@@ -151,7 +151,7 @@ def main(arguments=None):
     if not ((dftb_cmd is None) or (isinstance(dftb_cmd, str))):
         print('ERROR: invalid cmd.')
         return
-        
+    dftb_scc = dftb_dict.get('scc', 'No')
     
     # read section for Phonopy
     phonopy_dict = inp_dict.get('Phonopy', {})
@@ -171,7 +171,7 @@ def main(arguments=None):
 
 
     # 2 Initialize DFTB calculator
-    dftb = run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir)
+    dftb = run_init(ph, angular_momenta, dftb_cmd, dftb_scc, basedir, phonopy_dir, working_dir, results_dir)
 
     if args.command == 'bands':
         run_calc_el_bands(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
@@ -187,7 +187,7 @@ def main(arguments=None):
         run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_dir)
 
 
-def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir):
+def run_init(ph, angular_momenta, dftb_cmd, dftb_scc, basedir, phonopy_dir, working_dir, results_dir):
     '''
         Initialize DFTB calculator and run reference calculations
     '''
@@ -201,6 +201,11 @@ def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, r
         
     dftb.load_phonopy(ph)
 
+    scc = False
+    if dftb_scc == 'Yes':
+        scc = True
+    print(' - using SCC setting = %s' % dftb_scc)
+
     # Store Hamiltonian and overlap matrices
     if os.path.isfile('reference.npz'):
         print(' - loading reference calculation')
@@ -210,7 +215,7 @@ def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, r
     else:
         print(' - starting reference calculation ...')
         start = timer()
-        dftb.calculate_reference()
+        dftb.calculate_reference(scc=scc)
         end = timer()
         print(' - finished (%4.1f s).' % (end-start))
 
@@ -226,7 +231,7 @@ def run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, r
     else:
         print(' - starting derivatives calculation ...')
         start = timer()
-        dftb.calculate_derivatives()
+        dftb.calculate_derivatives(scc=scc)
         end = timer()
         print(' - finished (%4.1f s).' % (end-start))
 
@@ -379,7 +384,7 @@ def run_calc_epc(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, results_
 
     print('-- starting el-ph calculation ...')
     start = timer()
-    eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel)
+    eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel, scc=True)
     end = timer()
     print(' - finished (%4.1f s).' % (end-start))
 
@@ -481,7 +486,7 @@ def run_calc_ephline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resu
         print(' - processing path %s to %s' % (path[i][0], path[i][1]))
         nqpoints = qpoints[i].shape[0]
 
-        eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i], band_sel=band_sel)
+        eps_k, epskq, mesh_epskmq, g2 = dftb.calculate_g2(kvec0, qpoints[i], frequencies[i], eigenvectors[i], band_sel=band_sel, scc=True)
 
         bands.append(epskq)
         g_kq.append(np.sqrt(g2))
@@ -591,7 +596,7 @@ def run_calc_rtline(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, resul
 
     print('-- starting el-ph calculation ...')
     start = timer()
-    eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel)
+    eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = dftb.calculate_g2(kvec0, mesh_qpoints, mesh_frequencies, mesh_eigenvectors, band_sel=band_sel, scc=True)
     end = timer()
     print(' - finished (%4.1f s).' % (end-start))
 
