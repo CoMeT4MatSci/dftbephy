@@ -14,40 +14,46 @@ For more information see our articles:
 
 The BibTeX entries are available in [`references.bib`](https://github.com/CoMeT4MatSci/dftbephy/blob/master/references.bib).
 
-## DFTBephy Wiki 
+# DFTBephy Wiki 
 
-Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provides guidance on installing and running DFTBephy, reproducing the Graphene example, and following the workflow from band structures to electron–phonon coupling, scattering rates, and transport properties. It also includes detailed documentation of the input files.
+Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provides guidance on installing and running DFTBephy, reproducing the Graphene example, and following the workflow from band structures to electron–phonon coupling, scattering rates, and transport properties. It also includes detailed documentation of the input file.
 
 # Prerequisites
 
-- numpy and scipy
-- [dftb+](https://github.com/dftbplus/dftbplus)
-- [phonopy](https://github.com/phonopy/phonopy) (`conda install -c conda-forge phonopy`)
-- cython (`pip install Cython`) for faster routines.
-- Other packages might be necessary: mpi4py, openmpi, spglib, h5py, [hsd](https://github.com/dftbplus/hsd-python) 
+_Before and during the DFTBephy workflow:_
+- DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0"" `)
+
+_Before install/build DFTBephy:_
+- Build-system dependencies: `numpy`, `Cython`, `setuptools`
+- Other required runtime dependencies: `scipy`, `spglib<2.7` , `h5py`, `hsd` 
+- (Optional) Dependencies for MPI version: `mpi4py`, `openmpi`
 
 # Installation
 
 - Pull / download latest version from github.
-- Run `python setup.py build_ext --inplace` in the terminal to build faster routines.
-- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory.
+- Install build-system dependencies (`pip install numpy cython setuptools`). 
+- Run `python setup.py build_ext --inplace` in the terminal to build faster routines using Cython.
+- Run `pip install -e .` in the terminal to install package but keep it editable in the current directory (Serial Version, No-MPI).
+- (Optional) Run `python -m pip install -e ".[openmpi]"` to install the MPI version.
 
 # Running calculations
 
 - Starting point for all DFTBephy calculations is a finished phonopy calculation of the force constants (e.g. FORCE_SETS and phonopy_disp.yaml).
 - The working directory should contain a dftb_in.hsd file, which reads the geometry from geo.gen (will be written by DFTBephy) and contains the option `WriteHS = Yes` (to be used by DFTBephy). The directory may also contain charges.bin from a previous SCC run.
 - See the examples/ directory for more details. (It's recommended to copy one of the examples and adapt it to your needs.)
-- Detailed information about DFTBephy input (dftbephy_in.hsd) can be found [here][dftbephyinput] and on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
+- Detailed information about DFTBephy input (dftbephy_in.hsd) can be found on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
 
 # What you can get
-The main purpose of DFTBephy is the calculation of electron-phonon couplings. Apart from that, the package also allows the calculation of the electronic band-structure and the electron scattering rate (at the moment only within SERTA). The [scripts/](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts) directory contains some programs and templates for computing
-- EPCs at k-point on a (fine) q-mesh -- [dftbephy-epc.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-epc.py) -- the result is stored in a hdf5 file;
-- EPCs along a given q-path  -- [dftbephy-ephline.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-ephline.py) -- the results are stored in a json file;
-- Relaxation times on a (fine) k-mesh -- [dftbephy-relaxationtimes-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-relaxationtimes-mpi.py) -- the results are stored in a hdf5 file;
-- Conductivity tensor -- [dftbephy-mobility-mpi.py](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mobility-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
+The main purpose of DFTBephy is the calculation of electron-phonon couplings (EPCs). Apart from that, the package also allows the calculation of the electronic band-structure, the electron scattering rates, and the electronic conductivity (both at the moment only within SERTA).
+Specifically, DFTBephy allows to compute
+- Electronic bands and phonon dispersions along a path -- `dftbephy bands` -- the results are stored in json files;
+- EPCs at k-point on a (fine) q-mesh -- `dftbephy epc` -- the result is stored in a hdf5 file;
+- EPCs along a given q-path  -- `dftbephy ephline` -- the results are stored in a json file;
+- Relaxation times along a given q-path  -- `dftbephy rtline` -- the results are stored in a json file;
+- Relaxation times on a (fine) k-mesh -- [dftbephy-mpi.py relaxationtimes](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mpi.py) -- the results are stored in a hdf5 file;
+- Conductivity tensor -- [dftbephy-mpi.py mobility](https://github.com/CoMeT4MatSci/dftbephy/blob/master/scripts/dftbephy-mpi.py) -- the results are stored in a json file. For this script, spglib is required.
 
 See jupyter notebooks in [notebooks/](https://github.com/CoMeT4MatSci/dftbephy/tree/master/notebooks) for how to read, use and visualize the output.
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job.- http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-
-[dftbephyinput]: <https://github.com/CoMeT4MatSci/dftbephy/blob/master/Input_for_DFTBephy.md>

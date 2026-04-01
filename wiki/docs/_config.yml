@@ -22,7 +22,7 @@ sphinx:
     html_logo: logo/dftbephy-logo.png
     html_theme_options:
       logo:
-        text: "DFTBephy Wiki"   # with logo
+        text: "DFTBephy v0.2"   # with logo
       show_navbar_depth: 2
     html_last_updated_fmt: "%b %d, %Y"
     html_sidebars:
