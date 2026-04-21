@@ -177,8 +177,10 @@ DFTBephy {
 
     name = graphene
 
-    angularmomenta = {
+    DFTB = {
+      angularmomenta = {
         C = {s p}
+      }         
     }
 
     Bands {    }
