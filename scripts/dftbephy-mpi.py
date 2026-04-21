@@ -176,6 +176,8 @@ def run_calc_relaxationtimes(ph, dftb, inp_dict, basedir, phonopy_dir, working_d
     world_size = comm.Get_size()
     rank = comm.Get_rank()
     start_time = MPI.Wtime()
+    
+    name = inp_dict.get('name', '')
 
     # read section for relaxation time calculations
     rt_dict = check_hsd_input(inp_dict, 'RelaxationTimes')
@@ -382,6 +384,8 @@ def run_calc_transport(ph, dftb, inp_dict, basedir, phonopy_dir, working_dir, re
     world_size = comm.Get_size()
     rank = comm.Get_rank()
     start_time = MPI.Wtime()
+
+    name = inp_dict.get('name', '')
 
     # read section for conductivity calculations
     mob_dict = check_hsd_input(inp_dict, 'Conductivities')
