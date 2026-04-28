@@ -14,6 +14,11 @@ chapters:
       - file: examples/graphene-nonSCC/notebooks/scatterings
       - file: examples/graphene-nonSCC/notebooks/transport
 
+  - file: examples/band_nonparabolicity/index
+    sections:
+      - file: examples/band_nonparabolicity/notebooks/graphyne
+
+
   - file: documentation/index
     sections:
       - file: documentation/inputfile
