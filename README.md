@@ -22,7 +22,7 @@ Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provide
 
 _Before and during the DFTBephy workflow:_
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
-- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0"" `)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0,<=3.5.1"" `)
 
 _Before install/build DFTBephy:_
 - Build-system dependencies: `numpy`, `Cython`, `setuptools`
