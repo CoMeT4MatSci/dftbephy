@@ -4,7 +4,7 @@
 
 Before and during the DFTBephy workflow:
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
-- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0" `)
+- [Phonopy](https://phonopy.github.io/phonopy/install.html) (`conda install -c conda-forge "phonopy>=3.0.0,<=3.5.1" `)
 
 Before install/build DFTBephy:
 - **Build-system dependencies**: `numpy`, `Cython`, `setuptools`
@@ -86,9 +86,9 @@ mamba install  dftbplus-tools dftbplus-python
 When `dftbephy` environment is still active, install all the prerequisites for DFTBephy in a single step:
 
 ```
-mamba install numpy cython setuptools "spglib<2.7" "phonopy>=3.0.0" scipy h5py hsd-python openmpi mpi4py
+mamba install numpy cython setuptools "spglib<2.7" "phonopy>=3.0.0,<=3.5.1" scipy h5py hsd-python openmpi mpi4py
 ```
-Unfortunately, not all versions of phonopy and spglib are compatible with the current version of DFTBephy. Please install **spglib<2.7** and **phonopy>=3.0.0**.
+Unfortunately, not all versions of phonopy and spglib are compatible with the current version of DFTBephy (v0.2.1). Please install **spglib<2.7** and **phonopy>=3.0.0,<=3.5.1**.
 
 After downloading DFTBephy code from [GitHub](https://github.com/CoMeT4MatSci/dftbephy), you can run the following commands while the `dftbephy` conda environment is active.
 ```
