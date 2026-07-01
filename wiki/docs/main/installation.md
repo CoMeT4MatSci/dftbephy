@@ -37,28 +37,15 @@ Using `conda` or `mamba` is often the smoothest way to install packages because 
 
 ## Usage in a Conda environment
 
-If conda is not already installed, you can download the appropriate installer from [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) and then follow these steps:
+If conda is not already installed, you can download the appropriate installer from [Miniforge](https://github.com/conda-forge/miniforge/releases/tag/26.3.2-3) and then follow these steps:
 
 ```
 cd ~/Downloads
-bash Miniconda3-latest-Linux-x86_64.sh
-source ~/miniconda3/bin/activate
+bash Miniforge3-26.3.2-3-Linux-x86_64.sh
+source ~/miniforge3/bin/activate
 ```
 
-After running the last command, the base conda environment should be active—you should see (base) at the beginning of your terminal prompt. Before installing packages, make sure the conda-forge channel is enabled (needed if you want to install DFTB+ from conda-forge):
-
-```
-conda config --add channels conda-forge
-```
-
-Setting `channel_priority` to `strict` makes conda resolve packages as consistently as possible from a single, highest-priority channel. This reduces the chance of mixing packages from `defaults` and `conda-forge`, which can otherwise lead to version or dependency incompatibilities.
-
-```
-conda config --set channel_priority strict
-```
-
-If you prefer not to change global conda settings (or if `channel_priority strict` is not set), you can explicitly select the channel per command, e.g. `mamba install -c conda-forge numpy`.
-
+After running the last command, the base conda environment should be active—you should see (base) at the beginning of your terminal prompt. 
 
 ### Environment Setup for DFTBephy
 
