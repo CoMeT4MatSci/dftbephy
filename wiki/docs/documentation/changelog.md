@@ -1,5 +1,9 @@
 # Change Log
 
+## **[v0.2.2] - July, 28 2026**
+
+- Conda-forge package release
+
 ## **[v0.2.1] - April, 28 2026**
 
 ### Code
