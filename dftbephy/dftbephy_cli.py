@@ -155,20 +155,33 @@ def main(arguments=None):
     
     # read section for Phonopy
     phonopy_dict = inp_dict.get('Phonopy', {})
-    phonopy_yaml    = phonopy_dict.get('yaml_file', 'phonopy_disp.yaml')
+    phonopy_yaml    = phonopy_dict.get('yaml_file', 'phonopy.yaml')
     phonopy_symprec = phonopy_dict.get('symprec', None)
 
     # 1 Load phonopy
+    # Force constants are only read, not calculated: phonopy.load() is called with
+    # produce_fc=False, so FORCE_SETS are ignored. Force constants must be stored in
+    # the phonopy yaml file or in a FORCE_CONSTANTS file.
+
     print('-- looking for phonopy results in %s' % (basedir + phonopy_dir))
     os.chdir(basedir + phonopy_dir)
 
+    if not os.path.isfile(phonopy_yaml):
+        print('ERROR:', phonopy_yaml, 'file is missing!')
+        return
+        
     if phonopy_symprec is None:
-        ph = phonopy.load(phonopy_yaml)
-        print(" - using phonopy's default symmetry precision.")
+        ph = phonopy.load(phonopy_yaml, produce_fc=False)
+        print(" - using phonopy's default symmetry precision")
     else:
-        ph = phonopy.load(phonopy_yaml, symprec=phonopy_symprec)
+        ph = phonopy.load(phonopy_yaml, symprec=phonopy_symprec, produce_fc=False)
         print(" - phonopy's symmetry precision set to", phonopy_symprec)
+        
 
+    if ph.force_constants is None:
+        print('ERROR: Force constants not found in', phonopy_yaml, 'or FORCE_CONSTANTS files!')
+        return
+    print(" - force constants found")
 
     # 2 Initialize DFTB calculator
     dftb = run_init(ph, angular_momenta, dftb_cmd, basedir, phonopy_dir, working_dir, results_dir)
