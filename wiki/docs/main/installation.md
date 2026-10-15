@@ -2,11 +2,15 @@
 
 ## As conda-forge package
 
-DFTBephy v0.2.2 is available on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Pre-built packages are currently not available for Windows or Apple Silicon.
+> DFTBephy v0.2.2 is available as a **pre-compiled** package on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Conda package is currently not available for Windows or Apple Silicon.
+>
+> We recommend installing it in a new conda environment:
+> ```bash
+> conda create -n dftbephy -c conda-forge "python=3.12" dftbephy
+> conda activate dftbephy
+> ```
+> If conda is not installed yet, or if you prefer to build DFTBephy from source inside a conda environment, see *Usage in a Conda environment* below.
 
-```bash
-conda install -c conda-forge dftbephy
-```
 
 
 ## From source code
