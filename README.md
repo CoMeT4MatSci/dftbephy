@@ -18,7 +18,16 @@ The BibTeX entries are available in [`references.bib`](https://github.com/CoMeT4
 
 Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provides guidance on installing and running DFTBephy, reproducing the Graphene example, and following the workflow from band structures to electron–phonon coupling, scattering rates, and transport properties. It also includes detailed documentation of the input file.
 
-# Prerequisites
+# As conda-forge package
+
+DFTBephy v0.2.2 is available on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Pre-built packages are currently not available for Windows or Apple Silicon Macs.
+
+```bash
+conda install -c conda-forge dftbephy
+```
+
+# From source code
+## Prerequisites
 
 _Before and during the DFTBephy workflow:_
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
@@ -29,7 +38,7 @@ _Before install/build DFTBephy:_
 - Other required runtime dependencies: `scipy`, `spglib<2.7` , `h5py`, `hsd` 
 - (Optional) Dependencies for MPI version: `mpi4py`, `openmpi`
 
-# Installation
+## Installation
 
 - Pull / download latest version from github.
 - Install build-system dependencies (`pip install numpy cython setuptools`). 
