@@ -3,6 +3,7 @@
 ## **[v0.2.2] - July, 28 2026**
 
 - Conda-forge package release
+- Updated installation guide 
 
 ## **[v0.2.1] - April, 28 2026**
 
