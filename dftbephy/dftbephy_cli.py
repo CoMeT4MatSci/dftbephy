@@ -161,7 +161,7 @@ def main(arguments=None):
     # 1 Load phonopy
     # Force constants are only read, not calculated: phonopy.load() is called with
     # produce_fc=False, so FORCE_SETS are ignored. Force constants must be stored in
-    # the phonopy yaml file or in a FORCE_CONSTANTS file.
+    # the phonopy.yaml file or in a FORCE_CONSTANTS file.
 
     print('-- looking for phonopy results in %s' % (basedir + phonopy_dir))
     os.chdir(basedir + phonopy_dir)
