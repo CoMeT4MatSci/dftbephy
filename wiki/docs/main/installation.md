@@ -1,6 +1,16 @@
 # Installation
 
-## Prerequisites
+## As conda-forge package
+
+DFTBephy v0.2.2 is available on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Pre-built packages are currently not available for Windows or Apple Silicon.
+
+```bash
+conda install -c conda-forge dftbephy
+```
+
+
+## From source code
+### Prerequisites
 
 Before and during the DFTBephy workflow:
 - DFTB+ ( for detailed installation instructions, please visit [DFTB+ Recipes](https://dftbplus-recipes.readthedocs.io/en/latest/introduction.html).)
@@ -27,7 +37,7 @@ All DFTBephy dependencies are available via both `pip` and `conda`. External too
 While not strictly required, we recommend using a conda environment to keep dependencies isolated, avoid conflicts with system-wide packages, and make the setup reproducible. <br>
 Using `conda` or `mamba` is often the smoothest way to install packages because it provides precompiled binaries and handles compiled dependencies consistently. In this tutorial we preferred `mamba` since it resolves and installs dependencies faster than `conda`. Use `pip` only for packages not available on `conda-forge`.
 
-## How to install DFTBephy
+### How to install DFTBephy
 
 - Pull / download latest version from [GitHub](https://github.com/CoMeT4MatSci/dftbephy).
 - Install build-system dependencies (`pip install numpy cython setuptools`).
@@ -49,18 +59,13 @@ After running the last command, the base conda environment should be active—yo
 
 ### Environment Setup for DFTBephy
 
-Create a new conda environment using a recent Python version and then activate it:
+Create a new conda environment and activate it. We recommend Python 3.14, the latest version compatible with all required packages (tested with DFTBephy v0.2.2):
+
 
 ```
-conda create --name dftbephy
+conda create -n dftbephy "python=3.14"
 conda activate dftbephy
 ```
-
-> **Optional:**
-> In this tutorial we use `python=3.14`. You can pin the Python version for the environment as:
-> ```bash
-> conda create -n dftbephy "python=3.14"
-> ```
 
 
 Optionally, you can install DFTB+ inside this conda environment. If DFTB+ is already available on the machine, you can skip this step.
