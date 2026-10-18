@@ -1,5 +1,16 @@
 # Change Log
 
+## **[v0.2.3] - October, 18 2026**
+
+### Code
+- Updated `phonopy.load()` usage in `dftbephy_cli.py`: force constants are no longer calculated from `FORCE_SETS` (`produce_fc=False`). DFTBephy now only reads previously calculated force constants from `phonopy.yaml` or a `FORCE_CONSTANTS` file.
+- Changed default phonopy input file from `phonopy_disp.yaml` to `phonopy.yaml`. The force constants must be written into `phonopy.yaml`; otherwise, `FORCE_CONSTANTS` file has to be supplied in the `/phonons` directory.
+
+
+### Documentation
+- Updated *Graphene* tutorial for force constant calculation with phonopy
+
+
 ## **[v0.2.2] - July, 28 2026**
 
 - Conda-forge package release
