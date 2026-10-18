@@ -20,7 +20,7 @@ Our [wiki page](https://comet4matsci.github.io/dftbephy/main/about.html) provide
 
 # As conda-forge package
 
-DFTBephy v0.2.2 is available on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Pre-built packages are currently not available for Windows or Apple Silicon Macs.
+DFTBephy v0.2.3 is available on [conda-forge](https://anaconda.org/conda-forge/dftbephy) for **Linux** (x86_64) and **macOS** (Intel, x86_64) with **Python 3.10–3.12**. Pre-built packages are currently not available for Windows or Apple Silicon Macs.
 
 ```bash
 conda install -c conda-forge dftbephy
@@ -48,7 +48,7 @@ _Before install/build DFTBephy:_
 
 # Running calculations
 
-- Starting point for all DFTBephy calculations is a finished phonopy calculation of the force constants (e.g. FORCE_SETS and phonopy_disp.yaml).
+- Starting point for all DFTBephy calculations is a finished phonopy calculation of the force constants (e.g. phonopy.yaml file containing the force constants, which can be created after obtaining the FORCE_SETS via `phonopy --writefc --include-fc`).
 - The working directory should contain a dftb_in.hsd file, which reads the geometry from geo.gen (will be written by DFTBephy) and contains the option `WriteHS = Yes` (to be used by DFTBephy). The directory may also contain charges.bin from a previous SCC run.
 - See the examples/ directory for more details. (It's recommended to copy one of the examples and adapt it to your needs.)
 - Detailed information about DFTBephy input (dftbephy_in.hsd) can be found on the [wiki](https://comet4matsci.github.io/dftbephy/documentation/inputfile.html).
