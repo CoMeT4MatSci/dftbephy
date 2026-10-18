@@ -114,13 +114,18 @@ We also provided `make_dirs.sh` bash script to run the calculations for (each) d
 ./make_dirs.sh
 ```
 
-Once all displacement calculations have finished, collect the resulting forces and generate the force constants:
+Once all displacement calculations have finished, collect the resulting forces and create `FORCE_SETS`:
 
 ```
 phonopy -f disp-0*/results.tag --dftb+
 ```
 
-If it's successfull one should see `"FORCE_SETS" has been created.`.
+If it's successfull one should see `"FORCE_SETS" has been created.` Then generate the force constants and write them into `phonopy.yaml` file.
+ 
+```
+phonopy --writefc --include-fc
+```
+
 
 
 ## Preparing `/el-ph` directory
