@@ -1,11 +1,11 @@
 # DFTBephy Usage
 
-In preparation for DFTBephy calculations, it is essential first to carry out tight geometry optimization of the system with [DFTB+](https://dftbplus.org/about/index.html) and then to perform phonon calculations using [phonopy][phonopyDFTB+].
+In preparation for DFTBephy calculations, it is essential first to carry out tight geometry optimization of the system with [DFTB+](https://dftbplus.org/about/index.html) and then to calculate force constants using [phonopy][phonopyDFTB+].
 
 
 ## Workflow
 
-First, a tight DFTB+ geometry optimization is performed, followed by phonon calculations with phonopy. Based on the optimized geometry and the information in `phonopy_disp.yaml`, a supercell is constructed. DFTBephy uses DFTB+ to obtain the Hamiltonian and the overlap matrices in real space and DFTBephy then takes the Fourier transform of them. In the next step, each atom in the central cell is displaced and the real-space gradients of the Hamiltonian and the overlap matrices are found from a finite-difference scheme. Then, the gradients are also Fourier transformed. Now, together with the output of phonopy, i.e. phonon frequencies and polarizations, the electron-phonon coupling (EPC) constants $g^\lambda_{nm}(\vec{k},\vec{q})$ can be computed. From the EPCs, one can then calculate the scattering rates and the electrical conductivities.
+First, a tight DFTB+ geometry optimization is performed, followed by phonon calculations with phonopy. Based on the optimized geometry and the information in `phonopy.yaml`, a supercell is constructed. DFTBephy uses DFTB+ to obtain the Hamiltonian and the overlap matrices in real space and DFTBephy then takes the Fourier transform of them. In the next step, each atom in the central cell is displaced and the real-space gradients of the Hamiltonian and the overlap matrices are found from a finite-difference scheme. Then, the gradients are also Fourier transformed. Now, together with the output of phonopy, i.e. phonon frequencies and polarizations, the electron-phonon coupling (EPC) constants $g^\lambda_{nm}(\vec{k},\vec{q})$ can be computed. From the EPCs, one can then calculate the scattering rates and the electrical conductivities.
 
 :::{figure} workflow.png
 :width: 100%
@@ -26,8 +26,7 @@ Including the DFTBephy input file, `/examples/Graphene` can be used directly as 
 .
 ├── opt/                  # not used by DFTBephy
 ├── phonons/              # Only the files used by DFTBephy are shown
-│   ├── phonopy_disp.yaml
-│   └── FORCE_SETS
+│   ├── phonopy.yaml      # including the force constants
 ├── el-ph/
 │   ├── dftb_in.hsd
 │   └── geo.gen           # optimized unit-cell geometry
