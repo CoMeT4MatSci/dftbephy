@@ -48,7 +48,7 @@ DFTBephy {
     }
 
    Phonopy = {
-        yaml_file = phonopy_disp.yaml  #default
+        yaml_file = phonopy.yaml       #default
         symprec   = 1e-5               #default
     }
 
