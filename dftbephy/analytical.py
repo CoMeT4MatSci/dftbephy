@@ -1,21 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum
 import numpy as np
+from .units import Constants
 
 ################################################################################
 # Functions which might be moved to the other modules.
 ################################################################################
-
-# --------------------------------------------------------------------
-# Constants --> units.py
-# --------------------------------------------------------------------
-@dataclass
-class Constants:
-    HBAR_eV: float = 6.582e-4                      # [eV * picosecond]
-    ELEMENTARY_CHARGE_Aps: float = 1.602176634e-7  # [Ampere * picosecond]
-    BOLTZMANN_eV: float = 8.617333262e-5           # [eV / K]
-    # this won't be in the Constants class
-    qe_SI: float = ELEMENTARY_CHARGE_Aps * 1e-12   # Electron Charge [C]
 
 
 # --------------------------------------------------------------------
