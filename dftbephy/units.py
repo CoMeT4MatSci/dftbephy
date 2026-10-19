@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 BOHR__AA = 0.529177249
 AA__BOHR = 1.0 / BOHR__AA
 
@@ -8,3 +10,13 @@ AA_EV__m_s = 1e6/6.582 # Å eV/ hbar = 10^6/6.582 m/s
 EV__ps = 6.582e-4 # hbar / eV = 6.582e-4 ps
 
 hbar_amu_THz = 6.35 # Å^2
+
+
+
+@dataclass
+class Constants:
+    HBAR_eV: float = 6.582e-4                      # [eV * picosecond]
+    ELEMENTARY_CHARGE_Aps: float = 1.602176634e-7  # [Ampere * picosecond]
+    BOLTZMANN_eV: float = 8.617333262e-5           # [eV / K]
+    # this won't be in the Constants class
+    qe_SI: float = ELEMENTARY_CHARGE_Aps * 1e-12   # Electron Charge [C]
