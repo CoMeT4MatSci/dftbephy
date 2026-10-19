@@ -2,45 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 import numpy as np
 from .units import Constants
-
-################################################################################
-# Functions which might be moved to the other modules.
-################################################################################
-
-
-# --------------------------------------------------------------------
-# Fermi-Dirac --> analysis.py
-# --------------------------------------------------------------------
-
-###################   Functions from dftbephy-mpi.py  ################
-
-# _FD_XMAX = np.log(np.finfo(float).max)/2
-_FD_XMAX = 18.42068 # from BoltzTrap
-
-def fermi(x):
-    """
-    Fermi–Dirac occupation (unitless)
-    -----------------------
-        f(x = 1 / (exp((x)/kBT) + 1)
-
-    """
-    f = np.where(x < 0., 1., 0.)
-    norm_ind = np.logical_and(x > -_FD_XMAX, x < _FD_XMAX)
-    f[norm_ind] = 1/(np.exp(x[norm_ind]) + 1.)
-    return f
-
-def dfermi_deps(x):
-    f = np.zeros_like(x)
-    norm_ind = np.logical_and(x > -_FD_XMAX, x < _FD_XMAX)
-    f[norm_ind] = -np.exp(x[norm_ind])/(np.exp(x[norm_ind]) + 1.)**2
-    return f
-
-
-def step(x):
-    f = np.where(x < 0., 1., 0.)
-    return f
-
-#################  end dftbephy-mpi.py functions  #####################
+from .fermi_bose import fermi, dfermi_deps
 
 #######################  fermi func. for the analytical models ########
 def fermi_eps(eps, mu, kBT):
@@ -79,11 +41,6 @@ def dfermi_de(eps, mu, kBT):
     return  dfermi_deps(x) / kBT
 
 ##############  end of fermi func. for the analytical models ##########
-
-################################################################################
-# End of functions which might be moved to the other modules.
-################################################################################
-
 
 class Band(Enum):
     CONDUCTION = "conduction"
