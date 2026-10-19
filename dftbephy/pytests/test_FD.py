@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import dftbephy.analytical as ana
+import dftbephy.fermi_bose as fb
 
 # -------------------------
 # Constants / helpers
@@ -10,7 +11,7 @@ FD_XMAX = 18.42068
 
 def test_fd_xmax_value_is_expected():
     # sanity check that module constant didn't change
-    assert pytest.approx(ana._FD_XMAX, rel=0.0, abs=1e-12) == FD_XMAX
+    assert pytest.approx(fb._FD_XMAX, rel=0.0, abs=1e-12) == FD_XMAX
 
 
 # -------------------------
@@ -18,7 +19,7 @@ def test_fd_xmax_value_is_expected():
 # -------------------------
 def test_fermi_basic_values_and_bounds():
     x = np.array([-100.0, -10.0, 0.0, 10.0, 100.0])
-    f = ana.fermi(x)
+    f = fb.fermi(x)
 
     assert isinstance(f, np.ndarray)
     assert f.shape == x.shape
@@ -29,7 +30,7 @@ def test_fermi_basic_values_and_bounds():
 def test_fermi_tail_clipping_is_exact():
     # Beyond +FD_XMAX -> exactly 0; below -FD_XMAX -> exactly 1
     x = np.array([-FD_XMAX - 1e-6, -FD_XMAX, 0.0, FD_XMAX, FD_XMAX + 1e-6])
-    f = ana.fermi(x)
+    f = fb.fermi(x)
 
     # boundaries are outside the strict "mid" mask, so they are clipped
     assert f[0] == 1.0
@@ -42,8 +43,8 @@ def test_fermi_tail_clipping_is_exact():
 def test_fermi_particle_hole_symmetry():
     # For any x: f(x) + f(-x) = 1 (logistic identity; clipping preserves it)
     x = np.linspace(-30.0, 30.0, 301)
-    f = ana.fermi(x)
-    g = ana.fermi(-x)
+    f = fb.fermi(x)
+    g = fb.fermi(-x)
     assert np.allclose(f + g, 1.0, atol=1e-14)
 
 
@@ -52,7 +53,7 @@ def test_fermi_particle_hole_symmetry():
 # -------------------------
 def test_dfermi_deps_sign_and_peak_at_zero():
     x = np.array([-1.0, -0.1, 0.0, 0.1, 1.0])
-    df = ana.dfermi_deps(x)
+    df = fb.dfermi_deps(x)
 
     # df/dx should be <= 0 everywhere (monotone decreasing f)
     assert np.all(df <= 0.0)
@@ -67,7 +68,7 @@ def test_dfermi_deps_sign_and_peak_at_zero():
 
 def test_dfermi_deps_tail_is_exact_zero():
     x = np.array([-FD_XMAX - 1e-3, -FD_XMAX, FD_XMAX, FD_XMAX + 1e-3])
-    df = ana.dfermi_deps(x)
+    df = fb.dfermi_deps(x)
     assert np.all(df == 0.0)
 
 
@@ -75,8 +76,8 @@ def test_dfermi_deps_matches_numeric_derivative_in_mid_region():
     # Avoid clipping region: stay safely inside (-FD_XMAX, FD_XMAX)
     x = np.linspace(-5.0, 5.0, 101)
     h = 1e-7
-    num = (ana.fermi(x + h) - ana.fermi(x - h)) / (2.0 * h)
-    ana_df = ana.dfermi_deps(x)
+    num = (fb.fermi(x + h) - fb.fermi(x - h)) / (2.0 * h)
+    ana_df = fb.dfermi_deps(x)
     assert np.allclose(ana_df, num, rtol=1e-7, atol=1e-9)
 
 
@@ -101,7 +102,7 @@ def test_fermi_eps_is_fermi_of_dimensionless_argument():
 
     x = (eps - mu) / kBT
     f_eps = ana.fermi_eps(eps, mu, kBT)
-    f_x = ana.fermi(x)
+    f_x = fb.fermi(x)
 
     assert np.allclose(f_eps, f_x, atol=0.0, rtol=0.0)
 
@@ -140,7 +141,7 @@ def test_dfermi_de_chain_rule_relation_to_dfermi_deps():
 
     x = (eps - mu) / kBT
     dfde = ana.dfermi_de(eps, mu, kBT)
-    dfdx = ana.dfermi_deps(x)
+    dfdx = fb.dfermi_deps(x)
 
     assert np.allclose(dfde, dfdx / kBT, rtol=0.0, atol=0.0)
 
@@ -192,3 +193,21 @@ def test_dfermi_de_tail_is_exact_zero_outside_window():
 
     dfde = ana.dfermi_de(eps, mu, kBT)
     assert np.all(dfde == 0.0)
+
+# -------------------------
+# input-type tests (np.asarray safeguard)
+# -------------------------
+def test_fermi_accepts_python_float():
+    f = fb.fermi(0.5)
+    assert pytest.approx(float(f), rel=1e-12) == 1.0 / (np.exp(0.5) + 1.0)
+
+
+def test_fermi_accepts_list():
+    f = fb.fermi([0.0, 1.0])
+    assert np.allclose(f, [0.5, 1.0 / (np.e + 1.0)])
+
+
+def test_dfermi_deps_integer_array_not_truncated():
+    df = fb.dfermi_deps(np.array([0, 1]))
+    assert df.dtype == float
+    assert np.allclose(df, [-0.25, -np.e / (np.e + 1.0)**2])
