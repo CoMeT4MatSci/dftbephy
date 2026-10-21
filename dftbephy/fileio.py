@@ -219,7 +219,10 @@ def _parse_def_line(line):
     name = columns[0].strip()
     ftype = columns[1].strip()
     dims = int(columns[2])
-    shape = [int(el) for el in columns[3].split(',')]
+    if dims > 0:
+        shape = [int(el) for el in columns[3].split(',')]
+    else:
+        shape = [1]
         
     return name, ftype, dims, shape
     

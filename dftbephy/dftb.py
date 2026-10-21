@@ -5,7 +5,7 @@ import numpy as np
 import string
 
 from .units import *
-from .fileio import writegen 
+from .fileio import writegen, read_tagfile
 
 ENERGY_PATTERN = re.compile(r"mermin_energy[^:]*:[^:]*:[^:]*:\s*(?P<value>\S+)")
 
@@ -189,3 +189,61 @@ def calculate_hamiltonian_derivs(binary, disp, atom_ids, coords, specienames, sp
             ovr_derivs[ino][ii] = (overlap[1] - overlap[0]) / (2.0 * disp)
             
     return ham_derivs*HARTREE__EV, ovr_derivs
+
+
+def calculate_born_charges(binary, disp, atom_ids, coords, specienames, species, origin,
+                     latvecs, scc=False):
+    """Calculates derivatives of froces with respect to electric field by finite differences.
+       based on calculate_forces from calcderivs.py (DFTB+ developers group)
+       
+       returns: force_derivs (shape: (len(atom_ids), 3, 3)) in ???
+    """
+
+    forces = np.empty((2, len(atom_ids), 3), dtype=float)
+    force_derivs = np.empty((len(atom_ids), 3, 3), dtype=float)
+    
+    # write input geometry
+    writegen("geo.gen", (specienames, species, coords, origin, latvecs))
+
+    # check if charges from reference calculation exist
+    if os.path.isfile('charges0.bin'):
+        read_ref_charges = 'Yes'
+    else:
+        read_ref_charges = 'No'
+
+   
+    for ii in range(3): # iterate over cartesian coordinates
+        
+        for jj in range(2): # forward-backward displacement
+
+            ef_direction = np.array([0., 0., 0.])
+            ef_direction[ii] = float(2 * jj - 1)
+
+            if scc:
+                # read template file
+                with open('dftb_in.born-template') as t:
+                    template = string.Template(t.read())
+
+                # copy charges0.bin from reference calculation
+                if read_ref_charges[0] == 'Y':
+                    os.system('cp charges0.bin charges.bin')
+
+                # setup for scc calculation
+                final_output = template.substitute(maxscciterations=500, 
+                                                   readinitialcharges=read_ref_charges,
+                                                   efstrength=disp,
+                                                   efdirection=' '.join(str(x) for x in ef_direction))
+                # write file
+                with open('dftb_in.hsd', 'w') as output:
+                    output.write(final_output)
+
+                # run dftb+
+                run_dftb(binary)
+                                  
+            # read results tag file
+            results = read_tagfile('results.tag')
+            forces[jj] = results['forces'][atom_ids,:]
+                
+        force_derivs[:, :, ii] = -(forces[1] - forces[0]) / (2.0 * disp)
+        
+    return force_derivs
