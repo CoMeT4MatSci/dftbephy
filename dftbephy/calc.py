@@ -7,7 +7,7 @@ from .units import *
 from .atomic import *
 from .fileio import read_hamsqr1, read_oversqr, read_tagfile, readgen
 from .dftb import std_orbital_order, calculate_reference, calculate_hamiltonian_derivs
-from .epc import calculate_g2, calculate_scc_g2
+from .epc import calculate_g2, calculate_scc_g2, calculate_long_g2
 from .fourier import calculate_lattice_ft_kderivative
 
 try:
@@ -40,6 +40,8 @@ class DftbSuperCellCalc:
         self.S0 = None
         self.H_derivs = None
         self.S_derivs = None
+        self.Zstar = None
+        self.alpha2D = None
         
     def load_phonopy(self, ph):
         """Initialize calculator from existing phonopy results.
@@ -88,6 +90,8 @@ class DftbSuperCellCalc:
         self.S0 = None
         self.H_derivs = None
         self.S_derivs = None
+        self.Zstar = None
+        self.alpha2D = None
             
     def calculate_reference(self, scc=False):
         """Obtain Hamiltonian and overlap matrix for the supercell from DFTB. This system serves as a unperturbed reference.
@@ -261,6 +265,28 @@ class DftbSuperCellCalc:
             eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.H_derivs, self.S_derivs)
 
         return eps_k, mesh_epskq, mesh_epskmq, mesh_g2
+
+    def calculate_longrange_g2(self, kvec0, qpoints, ph_frequencies, ph_eigenvectors, band_sel=None):
+        """Calculate the squared electron-phonon couplings at kvec0 and kvec0+qpoints using the specified phonon frequencies (ph_frequencies in THz) and phonon eigenmodes (ph_eigenvectors).
+           The electronic bands can be selected with band_sel=[band0,band1+1].
+
+            returns: eps_k = electronic energies at kvec0 (nqpoints)
+                     mesh_epskq =  electronic energies at kvec0+qpoints (nqpoints, nbands)
+                     mesh_g2 = squared electron-phonon coupling matrix (nqpoints, nmodes, nbands, nbands)
+        """
+        if (self.H0 is None) or (self.S0 is None):
+            raise RuntimeError("Reference Hamiltonian and Overlap matrices not available. Run calculate_reference() first.")
+        if (self.H_derivs is None) or (self.S_derivs is None):
+            raise RuntimeError("Derivatives of Hamiltonian and Overlap matrices not available. Run calculate_derivatives() first.")
+        if (self.Zstar is None) or (self.alpha2D is None):
+            raise RuntimeError("Born charges and 2d polarizability not available.")
+
+        cell = self.primitive.cell * BOHR__AA
+        cell_area = np.linalg.norm(np.cross(cell[0],cell[1]))
+
+        eps_k, mesh_epskq, mesh_epskmq, mesh_g2 = calculate_long_g2(kvec0, band_sel, qpoints, ph_frequencies, ph_eigenvectors, self.uc2sc, self.sc2uc, self.sc2c, self.supercell, self.primitive, self.angular_momenta, self.H0, self.S0, self.Zstar, self.alpha2D)
+
+        return eps_k, mesh_epskq, mesh_epskmq, mesh_g2 * (2*np.pi/cell_area)**2
 
     def get_num_bands(self):
         """Return number of electronic bands.
